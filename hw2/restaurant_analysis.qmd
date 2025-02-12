@@ -1,0 +1,366 @@
+---
+title: "Restaurant Data Analysis"
+author: "WGE"
+format: html
+editor: visual
+---
+
+<https://github.com/scholarly-wolf/plan372_hmks>
+
+My github of this, found under hw2
+
+
+## Restaurant Cleanliness Result Analysis
+
+## Initial setup
+
+Here I install libraries I will need.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(stringr) 
+
+```
+
+Here I put the data into a proper object to work with
+
+```{r}
+
+restaurant_data <-read_csv("restaurant_inspections.csv")
+
+```
+
+## Starting analysis
+
+Now, I will make a histogram of restaurant inspection scores' distribution
+
+```{r}
+ggplot(data = restaurant_data, 
+       mapping = aes(x = SCORE)) +
+  geom_histogram(binwidth = 1)+
+  ggtitle("Num of Restaurants in Wake receiving Score")
+
+```
+
+As you can see, there's a strong tendency of the score to be in the low 80s at most--and yet it extends all the way to 0. Looking into the dataset, it can be found that there is a single 0 score in the dataset and only one--which can be discounted for graph purposes to look at the main substance of the binning better, at least.
+
+```{r}
+nozeroset <- subset(restaurant_data, SCORE>0)
+
+ggplot(data = nozeroset, 
+       mapping = aes(x = SCORE)) +
+  geom_histogram(binwidth = 1)+
+  ggtitle("Num of Restaurants in Wake receiving Score")
+
+```
+
+Much better for analysis!
+
+## Age of Restaurants
+
+Some restaurants have been around a lot longer--is there a correlation between restaurant age and their general scoring tendency?
+
+I have once again removed the 0 score value, as it makes the graph similarly annoying to read.
+
+```{r}
+
+class(nozeroset$RESTAURANTOPENDATE)
+
+head(nozeroset)
+
+#2017-10-22 04:00:00
+
+restaurant_data <- restaurant_data %>% 
+  mutate(date1 = str_sub(RESTAURANTOPENDATE, end = -13)) %>% 
+  mutate(open_date = as.Date(date1,format = "%Y/%m/%d"),
+         open_year = year(open_date))
+
+#had to cut off the timestamp at the end, then convert to a date object
+
+#redefining nozeroset
+nozeroset <- subset(restaurant_data, SCORE>0)
+
+
+ggplot(data = nozeroset,mapping = aes(x = open_year, y = SCORE))+
+  geom_point(col = "blue", size = 1)#+
+  geom_smooth(col = "red")
+```
+
+It does not appear to have that much correlation--there's a small trend towards score decreasing as the open year gets closer to the modern day, but it doesn't appear major.
+
+My first hypothesis would be thinking that re-inspections could simply bump up likelihood of older restaurants having a better final score--but Re-Inspections appear to be quite rare in the dataset, as you can see.
+
+```{r}
+
+ggplot(restaurant_data,mapping = aes(x = TYPE))+
+  geom_bar()
+
+```
+
+## Inspection scores by city
+
+Do inspection scores vary by Wake County city? First, we must standardize the spellings of all the city names, and correct for errors
+
+```{r}
+
+unique(restaurant_data$CITY)
+
+
+test <-restaurant_data %>% 
+  mutate(CITY = str_to_upper(CITY)) %>% 
+  mutate(CITY = str_replace(CITY,"RTP","RESEARCH TRIANGLE PARK")) %>%
+  mutate(CITY = str_replace(CITY,"FUQUAY VARINA","FUQUAY-VARINA")) %>%
+  mutate(CITY = str_replace(CITY,"HOLLY SPRING","HOLLY SPRINGS")) %>% 
+  mutate(CITY = str_replace(CITY,"HOLLY SPRINGSS","HOLLY SPRINGS")) %>% 
+  mutate(CITY = str_replace(CITY,"MORRISVILE","MORRISVILLE"))
+
+unique(test$CITY)
+
+restaurant_data<-test
+
+unique(restaurant_data$CITY)
+
+#RTP -> research triangle park
+#FQ-V -> FQ v
+#holly spring -> holly springs
+#morris vile -> ville
+
+```
+
+Now, with 19 unique locations, 18 discounting N/A...
+
+```{r}
+
+test2 <- restaurant_data %>% 
+  group_by(CITY) %>% 
+  summarize(city_average_inspection = mean(SCORE))
+
+test2
+```
+```{r}
+
+ggplot(test2, mapping = aes(x=CITY,y=city_average_inspection))+
+  geom_point()+
+  ylab("avg score")+
+  theme(axis.text.x = element_text(angle=90))
+
+
+```
+It does appear to vary somewhat! incorporating other factors such as city average wealth, or city population, or competition level for restaurants, or a number of other elements could potentially be interesting to look into.
+
+
+
+## Inspector variance
+
+Wake county has a team of inspectors, who have likely changed somewhat over the years to boot. Do inspection results vary by inspector?
+
+We can use much the same technique as the previous section, hopefully with less cleaning-up beforehand.
+
+```{r}
+
+unique(restaurant_data$INSPECTOR)
+
+```
+
+```{r}
+
+test3 <- restaurant_data %>% 
+  group_by(INSPECTOR) %>% 
+  summarize(average_by_inspector = mean(SCORE)) %>% 
+  ungroup()
+
+test3
+
+
+```
+```{r}
+
+ggplot(test3, mapping = aes(x=INSPECTOR,y=average_by_inspector))+
+  geom_point()+
+  ylab("avg score")+
+  theme(axis.text.x = element_text(angle=90))
+
+```
+Strange! there appears to be one particular wild outlier from the largely-homogenous averages...But I wonder if this might be our culprit from earlier graphs.
+
+```{r}
+
+#renewing it
+nozeroset <- subset(restaurant_data, SCORE>0)
+
+test4 <- restaurant_data %>% 
+  group_by(INSPECTOR) %>% 
+  summarize(average_by_inspector = mean(SCORE)) %>% 
+  ungroup()
+
+ggplot(test4, mapping = aes(x=INSPECTOR,y=average_by_inspector))+
+  geom_point()+
+  ylab("avg score")+
+  theme(axis.text.x = element_text(angle=90))
+
+
+
+```
+Fascinatingly, it isn't! examining the dataset indicates that it's Inspector Meghan Scott who assigned the lone 0 score--not this outlier Inspector Thomas Jumalon. What could be causing this?
+
+##Sample Sizes
+
+Perhaps it's the sample size to blame? How many inspections has each inspector carried out?
+
+```{r}
+
+samplesize_inspector <-restaurant_data %>% 
+  mutate(inspected = 1) %>% 
+  group_by(INSPECTOR) %>% 
+  summarize(inspections = sum(inspected)) %>% 
+  ungroup()
+
+samplesize_inspector
+```
+
+Illustrated on a graph, this becomes
+
+```{r}
+
+ggplot(samplesize_inspector, mapping = aes(x=INSPECTOR,y=inspections))+
+  geom_point()+
+  ylab("Inspections")+
+  theme(axis.text.x = element_text(angle=90))
+
+
+```
+And here the true culprit of the outlier is revealed--the fact that Thomas Jumalon only performed 3 inspections, along with a number of other inspectors who performed few looks. Thomas Jumalon likely happened to make a few lower grades in those mere 3 inspections, without the evident average of 95+ -- creating a stark outlier. 
+
+In fact, we can check what his were.
+
+```{r}
+
+jumalon <- subset(restaurant_data, INSPECTOR=="Thomas Jumalon")
+
+jumalon
+```
+
+You can see that of his 3 inspections, two were low and one was significantly low, relatively speaking, leading to his notably outlying average score.
+
+
+## Restaurant relative to others
+
+Are restaurants more cleanly than other types of food facilities that are inspected in this dataset?
+
+
+```{r}
+
+unique(restaurant_data$FACILITYTYPE)
+
+```
+```{r}
+
+comparison_r <- restaurant_data %>% 
+  group_by(FACILITYTYPE) %>% 
+  summarize(avg_score = mean(SCORE)) %>% 
+  ungroup()
+
+comparison_r
+
+```
+
+No, in fact, it appears as though restaurants are on the whole less cleanly than other facility types, bar none but "N/A".
+
+However, I have a suspicion that...
+
+```{r}
+samplesize_facil <-restaurant_data %>% 
+  mutate(pip = 1) %>% 
+  group_by(FACILITYTYPE) %>% 
+  summarize(locations = sum(pip)) %>% 
+  ungroup()
+
+samplesize_facil
+
+
+```
+
+...the sample size means that this kind of result is not surprising, although it may still be illustrative of something. It is likely that something is simply that there are far more restaurants than any other category by a factor of magnitude, and thus naturally they will vary far more, dragging the average down somewhat.
+
+
+
+## ANALYSIS FOR RESTAURANTS
+
+Since restaurants are where the general public is most likely to interact with the food-service system, Wake County Public Health is particularly interested in sanitation in restaurants.
+
+Thus, here are the above analyses restricted to restaurant type facilities.
+
+```{r}
+
+only_restaurants <- subset(restaurant_data, FACILITYTYPE=="Restaurant")
+
+```
+
+
+Histogram of overall scores of restaurants, 
+
+```{r}
+r_nozeroset <- subset(only_restaurants, SCORE>0)
+
+ggplot(data = r_nozeroset, 
+       mapping = aes(x = SCORE)) +
+  geom_histogram(binwidth = 1)+
+  ggtitle("Num of Restaurants in Wake receiving Score")
+
+```
+
+Newer versus older Restaurants
+
+```{r}
+ggplot(data = r_nozeroset,mapping = aes(x = open_year, y = SCORE))+
+  geom_point(col = "blue", size = 1)#+
+  geom_smooth(col = "red")
+```
+Variation by city--as I've already cleaned the data, I needn't do it again, luckily.
+
+```{r}
+test5 <- only_restaurants %>% 
+  group_by(CITY) %>% 
+  summarize(city_average_inspection = mean(SCORE))
+
+test5
+
+```
+```{r}
+ggplot(test5, mapping = aes(x=CITY,y=city_average_inspection))+
+  geom_point()+
+  ylab("avg score")+
+  theme(axis.text.x = element_text(angle=90))
+
+```
+It varies by city much like the previous data--and with somewhat different outliers, which is interesting. Clayton, for instance, dropped significantly without the evidently balancing influence of other food facilities--it would be interesting to analyze more deeply here, especially checking what kinds of food facilities are most common in what cities based on this notable shift...
+
+
+
+
+Similarly, inspector variance
+
+```{r}
+
+unique(only_restaurants$INSPECTOR)
+
+
+```
+
+of some interest is the fact that it was 39 previously--there are some inspectors who evidently only inspect non-restaurant facilities.
+```{r}
+
+test6 <- only_restaurants %>% 
+  group_by(INSPECTOR) %>% 
+  summarize(average_by_inspector = mean(SCORE)) %>% 
+  ungroup()
+
+ggplot(test6, mapping = aes(x=INSPECTOR,y=average_by_inspector))+
+  geom_point()+
+  ylab("avg score")+
+  theme(axis.text.x = element_text(angle=90))
+
+
+```
+
