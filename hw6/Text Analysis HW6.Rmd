@@ -8,6 +8,8 @@ header-includes:
   \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
+Code can be found at: https://github.com/JBrighttt/plan372_hmks/tree/main/hw6
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, fig.width = 16/2, fig.height = 9/2)
 knitr::opts_chunk$set(echo = TRUE)
