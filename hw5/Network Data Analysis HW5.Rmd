@@ -8,6 +8,8 @@ header-includes:
   \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
+Code can be found at: https://github.com/JBrighttt/plan372_hmks/tree/main/hw6
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, fig.width = 16/2, fig.height = 9/2)
 knitr::opts_chunk$set(echo = TRUE)
@@ -32,12 +34,13 @@ library(stargazer)
 ```
 
 ```{r, results=FALSE, message=FALSE}
+setwd("/Users/julia/Library/CloudStorage/OneDrive-UniversityofNorthCarolinaatChapelHill/Documents/PLAN372")
 #read in the data
 networks <- st_read("plan372_hmks/hw5/network_data/network.gpkg")
 connected_points <- st_read("plan372_hmks/hw5/network_data/connected_points.gpkg")
 unconnected_points <- st_read("plan372_hmks/hw5/network_data/unconnected_points.gpkg")
 #load in map of NC counties
-map <- st_read("/Users/julia/Library/CloudStorage/OneDrive-UniversityofNorthCarolinaatChapelHill/Documents/PLAN372/plan372_hmks/hw5/ncgs_state_county_boundary_1669968401550919539/NC_State_County_Boundary_NAD832011.shp")
+map <- st_read("/Users/julia/Library/CloudStorage/OneDrive-UniversityofNorthCarolinaatChapelHill/Documents/PLAN372/plan372_hmks/hw5/NC State Map/NC_State_County_Boundary_NAD832011.shp")
 
 ```
 
