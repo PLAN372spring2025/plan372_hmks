@@ -1,0 +1,179 @@
+---
+title: "Text Analysis HW6"
+author: "Julia Bright"
+date: "2025-04-11"
+output: pdf_document
+header-includes:
+  \usepackage{fvextra}
+  \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, fig.width = 16/2, fig.height = 9/2)
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+
+rm(list=ls())
+
+library(tidyverse)
+library(tidygraph)
+library(igraph)
+library(tidycensus)
+library(sf)
+library(ggspatial)
+library(ggthemes)
+library(leaflet)
+library(tibble)
+library(osmdata)
+library(nabor)
+library(broom)
+library(stargazer)
+library(knitr)
+```
+
+```{r}
+#read in data
+trees <- read_csv("/Users/julia/Library/CloudStorage/OneDrive-UniversityofNorthCarolinaatChapelHill/Documents/PLAN372/plan372_hmks/hw6/TS3_Raw_tree_data.csv")
+```
+
+## Question 1
+
+```{r}
+#separate cityname and state in the City column 
+trees$cityname <- str_match(trees$City, "^[:alpha:]+")[,1]
+trees$state <- str_match(trees$City, "[:alpha:]+$")[,1]
+
+#table shows amount of tree records for each state
+table(trees$state)
+```
+
+## Question 2
+
+```{r}
+#filter dataset to only NC and SC
+treesNCSC <- trees %>% 
+  filter(state== "NC" | state=="SC")
+unique(treesNCSC$cityname)
+```
+
+They collected data from Charleston and Charlotte.
+
+## Question 3
+
+```{r}
+#create genus and species variables by separating the two in the scientific name column
+treesNCSC$genus <- str_match(treesNCSC$ScientificName, "([:alpha:]+) ([:alpha:]+)")[,2]
+treesNCSC$species <- str_match(treesNCSC$ScientificName, "([:alpha:]+) ([:alpha:]+)")[,3]
+
+#find avg canopy size by genus in NC/SC
+canopyNCSC <- treesNCSC %>% 
+  group_by(genus) %>% 
+  summarize(avg_Cdia = mean(`AvgCdia (m)`))
+
+max(canopyNCSC$avg_Cdia)
+```
+
+The genus with the largest average crown diameter in North and South Carolina is the Quercus, at `r max(canopyNCSC$avg_Cdia)` meters. 
+
+## Question 4
+
+```{r}
+#remove all x's and one space that comes before it to solve problem of hybrid species denotation
+trees$ScientificName <- str_remove_all(trees$ScientificName, "[:space:]x")
+
+#separate genus and species
+trees$genus <- str_match(trees$ScientificName, "([:alpha:]+) ([:alpha:]+)")[,2]
+trees$species <- str_match(trees$ScientificName, "([:alpha:]+) ([:alpha:]+)")[,3]
+
+#find avg canopy size by genus in the dataset
+canopy <- trees %>% 
+  group_by(genus) %>% 
+  summarize(avg_cdia = mean(`AvgCdia (m)`))
+max(canopy$avg_cdia)
+
+#group by genus, count the number of distinct species within each genus
+totals <- trees %>% 
+  group_by(genus) %>% 
+  summarize(num = n_distinct(species))
+
+t1 <- totals[1:42,]
+t2 <- totals[43:85,]
+kable(list(t1, t2), caption="Number of species within each genus")
+```
+
+|
+|
+|
+|
+|
+|
+|
+|
+|
+
+## Extra Credit
+
+```{r}
+#group by genus and find average ages 
+ages <- trees %>% 
+  group_by(genus) %>% 
+  summarize(avg_age = mean(Age))
+
+#join canopy averages with age averages
+canopyages <- full_join(ages, canopy)
+
+#linear model showing effect of age on canopy size
+fit <- lm(avg_cdia ~ avg_age, data=canopyages)
+fit
+
+#scatterplot with trend line of linear model
+ggplot(canopyages, aes(x = avg_age, y = avg_cdia)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+There are some significant differences in the average age of the different genera presented in the dataset. I do believe this could be a factor in the results of the average canopy size, given that the genera with the largest crown diameter in both the NC/SC dataset and the full dataset have an average age of 29 and 43 years, respectively. 
+
+Given this fact, I decided to join together two datasets, both grouped by genus, which summarize the average ages and canopy sizes. Using this joined dataset 'canopyages', I created a linear model to see what effect genus age had on genus crown size, on average. Shown in the scatterplot above is the trend line of that linear regression, revealing that there is an obvious relationship, but that after 40 years the effect is not as strong. 
+
+Given that most average crown sizes are below 10 meters, I scanned the scatterplot for a "sweet spot" of tree genera that reach a large crown diameter at a young age. Two stand out, which you may be able to see for yourself on the plot, that average around 12.5 meters in diameter and 18 years of age. These two genera are Morus and Zelkova. When sorting the 'canopyages' dataframe by age they stand out among similarly aged genera, as most around their age average a canopy diameter of 6 to 9 meters. 
+
+
+```{r}
+#i just saw that I'm supposed to recommend a genera for just NC/SC, I'm leaving in the above analysis since I already did it 
+
+agesNCSC <- treesNCSC %>% 
+  group_by(genus) %>% 
+  summarize(avg_age = mean(Age))
+
+canopy_ages_NCSC <- full_join(agesNCSC, canopyNCSC)
+
+#linear model showing effect of age on canopy size
+fit2 <- lm(avg_Cdia ~ avg_age, data=canopy_ages_NCSC)
+fit2
+
+#scatterplot with trend line of linear model
+ggplot(canopy_ages_NCSC, aes(x = avg_age, y = avg_Cdia)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+Based on this linear model looking only at trees in North and South Carolina, the effect of age on canopy size is even greater than in the full dataset, but this may be due to the smaller sample size. The plot above shows the corresponding trend line. We can see at the top right of the plot our previously identified genus with the largest average crown diameter in the Carolinas, Quercus. There appear to be several candidates for fast-growing trees in the Carolinas. Upon inspection of the dataframe and sorting by age, Betula and Ulmus would be my two recommendations for the goal of planting trees that will provide the greatest canopy cover in the shortest amount of time. 
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
