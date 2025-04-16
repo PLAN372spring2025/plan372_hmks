@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>HW4</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="HW4_files/libs/clipboard/clipboard.min.js"></script>
+<script src="HW4_files/libs/quarto-html/quarto.js"></script>
+<script src="HW4_files/libs/quarto-html/popper.min.js"></script>
+<script src="HW4_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="HW4_files/libs/quarto-html/anchor.min.js"></script>
+<link href="HW4_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="HW4_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="HW4_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="HW4_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="HW4_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">HW4</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="reid-consulting-studio-report-on-the-rdu-airline-market-and-air-carolina-potential" class="level2">
+<h2 class="anchored" data-anchor-id="reid-consulting-studio-report-on-the-rdu-airline-market-and-air-carolina-potential">Reid Consulting Studio Report on the RDU Airline Market and Air Carolina Potential</h2>
+<p>Reid Consulting Studio’s analyst visualized data across geography and census populations to prepare a summary of flight patterns at national and RDU specific scales. We have also included a recommendation of use for preliminary flight paths for Air Carolina. Our findings indicate that certain flights are signifigantly more promising that others. Due to time constraints, this report covers only the necessitated population and fight distance metrics in our analysis, although the results of these analysis may indicate that mult-variable analysis of these gogether may not have the best correlatation with the data.</p>
+<p>Our consulting firm highly values transparency and has included our representative’s coding work, should there be any questions on our methodologies.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Loading our packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co">#generally needed for functioning </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf) <span class="co">#for any mapping that will be needed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#census_api_key("96828ca56f0143ae6487c9bcad55244bb0e28959", install=T) #setting the key</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr) <span class="co">#for merging things later</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggthemes) </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>all_flights <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"/Users/celestereid/Documents/PLAN372/HW 4/airport_pairs.csv"</span>) <span class="co">#pulling in our data on flights</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 9502 Columns: 10
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (6): origin, dest, origin_name, origin_cbsa_name, dest_name, dest_cbsa_name
+dbl (4): passengers, distancemiles, origin_cbsa, dest_cbsa
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(all_flights<span class="sc">$</span>origin) <span class="co">#They all seem to be capitalized and airport misspellings seem unlikely with just 3 letters. so it makes me think we're unlikely to have strange duplicates that need to be adjusted. </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="question-1-market-saturation-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="question-1-market-saturation-analysis">Question 1: Market Saturation Analysis</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Now the goal is to identify which flights are either arriving or departing from RDU</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> RDU_flights <span class="ot">&lt;-</span> all_flights  <span class="co">#I'm making a new object where I'm going to house just the data related to RDU</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> RDU_flights <span class="ot">&lt;-</span> RDU_flights <span class="sc">%&gt;%</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>( RDU_flights, <span class="at">arrival_dummy =</span><span class="fu">ifelse</span>(dest<span class="sc">==</span><span class="st">"RDU"</span>,<span class="dv">1</span>,<span class="dv">0</span>), <span class="co">#Creating a dummy variable for flights arriving in RDU</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">departure_dummy =</span> <span class="fu">ifelse</span>(origin<span class="sc">==</span><span class="st">"RDU"</span>,<span class="dv">1</span>,<span class="dv">0</span>)) <span class="sc">%&gt;%</span>    <span class="co">#And a dummy variable for flights departing RDU</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">RDU_dummy =</span> arrival_dummy <span class="sc">+</span> departure_dummy) <span class="co">#And then a dummy where 1 should mean a flight either departs or arrives at RDU, 0 should mean unrelated to RDU, and more than 1 shows an error of some sort because flights cannot both arrive and depart from RDU</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">unique</span>(RDU_flights<span class="sc">$</span>RDU_dummy) <span class="co">#The only outputs are 1s or 0s, which means there are no weird RDU to RDU flights that need to be filtered out. A quick look at the data confirms it looks like how I want it to</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#Now that we've identified the flights associated with RDU, we're going to filter it so that only the associated flights are present in our object</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a> RDU_flights <span class="ot">&lt;-</span> RDU_flights <span class="sc">%&gt;%</span>  <span class="co">#indicates we're working with this object</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(RDU_dummy <span class="sc">==</span> <span class="dv">1</span>)  <span class="co">#filters to just the flights associated with RDU through our dummy</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">#Then we're going to filter out anything with a value less than 10,000 for passengers on the flight. This to account for flights that do not actually have non-stop routes to RDU</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a> RDU_flights <span class="ot">&lt;-</span> RDU_flights <span class="sc">%&gt;%</span>  <span class="co">#indicates we're working with this object</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(passengers <span class="sc">&gt;=</span> <span class="dv">10000</span>) <span class="co">#filtering to just flights with over 10000 passengers</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Air Carolina is predicted to operate primarily through direct flights in and out of the RDU airport. Thus, our representative visualized direct flights already operating out of RDU. The below table shows every flight that either originates or terminates at the RDU airport. The number of passengers who have flown on this route between October 2021 and September 2022 were also calcuated. Flight routes with under 10,000 passengers total were ommited due to concerns with human error and the possible inclusion of non-stop flights.</p>
+<p>Our findings showed that the flight pattern with the most traffic was from RDU to ATL with 540190 passengers. Given our 10,000 passenger lower bound, the flight with the least traffic was from BUF to RDU with 11140 passengers over the 11 month period. Our firm reccomends that Air Carolina look into the demand metrics of these flight paths to see if any of them have much higher demand than supply, as indicated by high flight prices, sold out flights, etc. Outside of flight paths that meet those criteria, we reccomended Air Carolina consider flight paths with airports not yet serviced from RDU so that they are not in direct competition with already established brands.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Then we're going to figure out how to display it as a table</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>RDU_table <span class="ot">&lt;-</span> <span class="fu">select</span>(RDU_flights, origin, dest, passengers) <span class="sc">%&gt;%</span> <span class="co">#getting rid of the data that isn't relevant for us</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">destination =</span> dest) <span class="co">#making the names pretty for the table</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">max</span>(RDU_table<span class="sc">$</span>passengers)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 540190</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">min</span>(RDU_table<span class="sc">$</span>passengers)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 11140</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(RDU_table, <span class="at">n=</span><span class="dv">69</span>) <span class="co"># displaying the object we filtered</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 69 × 3
+   origin destination passengers
+   &lt;chr&gt;  &lt;chr&gt;            &lt;dbl&gt;
+ 1 ATL    RDU             537720
+ 2 MSP    RDU             126900
+ 3 RDU    JFK             183080
+ 4 RDU    MCO             259640
+ 5 RDU    MSP             123300
+ 6 SLC    RDU              58390
+ 7 DTW    RDU             124700
+ 8 FLL    RDU              97440
+ 9 LAS    RDU              94100
+10 LAX    RDU             104750
+11 MCO    RDU             259570
+12 SEA    RDU             110710
+13 SJU    RDU              37840
+14 RDU    ORD             201390
+15 ORD    RDU             208960
+16 CLT    RDU             378130
+17 RDU    PHL             153970
+18 DCA    RDU             128190
+19 IAD    RDU              80640
+20 RDU    EWR             195890
+21 RDU    IAD              78870
+22 DEN    RDU             220540
+23 RDU    AUS             101110
+24 RDU    BNA             141990
+25 DAL    RDU              45370
+26 RDU    BWI             130900
+27 RDU    FLL              94610
+28 BNA    RDU             149660
+29 AUS    RDU              95450
+30 RDU    MDW             118840
+31 MDW    RDU             120530
+32 BWI    RDU             125660
+33 TPA    RDU             146790
+34 PHX    RDU              51880
+35 RDU    TPA             146550
+36 DFW    RDU             223120
+37 RDU    BOS             215960
+38 RDU    DCA             129930
+39 RDU    LGA             272810
+40 PHL    RDU             152980
+41 EWR    RDU             196960
+42 RDU    PHX              50940
+43 RDU    LAX             101210
+44 SFO    RDU              50750
+45 RDU    IAH              60860
+46 RDU    DTW             130110
+47 LGA    RDU             274490
+48 MIA    RDU             200900
+49 RDU    ATL             540190
+50 RDU    SLC              55170
+51 BOS    RDU             216900
+52 JFK    RDU             185520
+53 RDU    MIA             196350
+54 RDU    SEA             109050
+55 RDU    SJU              36860
+56 RDU    DEN             226520
+57 RDU    LAS              94810
+58 STL    RDU              41630
+59 RDU    STL              41960
+60 RDU    DFW             215960
+61 IAH    RDU              62470
+62 RDU    SFO              47820
+63 PIT    RDU              29840
+64 TTN    RDU              18120
+65 RDU    DAL              46530
+66 RDU    CLT             370480
+67 RDU    PIT              30750
+68 RDU    TTN              17650
+69 BUF    RDU              11140</code></pre>
+</div>
+</div>
+</section>
+<section id="question-2-bringing-in-census-data" class="level2">
+<h2 class="anchored" data-anchor-id="question-2-bringing-in-census-data">Question 2: Bringing in Census Data</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#We're going to get some information from tinycensus</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Pull the population, as well as the median income or one other relevant thingy and put it into an object</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#I used this source for help https://walker-data.com/tidycensus/articles/basic-usage.html</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>variableoptions <span class="ot">&lt;-</span> <span class="fu">load_variables</span>(<span class="dv">2020</span>, <span class="st">"acs5"</span>, <span class="at">cache =</span> <span class="cn">TRUE</span>) <span class="co">#finding variable options and IDs to import</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>census <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(<span class="at">geography =</span><span class="st">"cbsa"</span>, <span class="co">#importing chosen variables for cbsa geography in 2020</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">variables =</span> <span class="fu">c</span>(</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">population =</span> <span class="st">"B01003_001"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">income =</span> <span class="st">"B19013_001"</span>),</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>                        <span class="at">year =</span> <span class="dv">2020</span>, </span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>                        <span class="at">survey=</span><span class="st">"acs5"</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                        <span class="at">output=</span><span class="st">"wide"</span>,</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">geometry =</span> T) <span class="co">#making sure it is spatial so we can join</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Getting data from the 2016-2020 5-year ACS</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Downloading feature geometry from the Census website.  To cache shapefiles for use in future sessions, set `options(tigris_use_cache = TRUE)`.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>census <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(census, <span class="dv">4269</span>) <span class="co">#make it a spatial dataset with EPSG 4269 (north america)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(census) <span class="co">#it is spatial now</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Join cbsa data to airport data twice - once on origin cbsa, once on departure cbsa (aka join orgin_pop to RDU_origin somehow)</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">#this should be an XYZ MERGE THINGY</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>census_origin <span class="ot">&lt;-</span> census <span class="sc">%&gt;%</span>  <span class="co">#creating a dataset to represent the origin cbsa and renaming its columns so we can identify it once its joined</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">GEOID_origin =</span> GEOID,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">populationEorigin =</span> populationE,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">origin_NAME =</span> NAME,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">populationMorigin =</span> populationM,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">incomeEorigin =</span> incomeE,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">incomeMorigin =</span> incomeM,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">geometryorigin =</span> geometry</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>census_departure <span class="ot">&lt;-</span> census <span class="sc">%&gt;%</span> <span class="co">#creating a dataset to represent the departure cbsa and renaming its columns so we can identify it once its joined</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">GEOID_depart =</span> GEOID,</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">populationE_depart =</span> populationE,</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">populationMdeaprt =</span> populationM, </span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">deaprture_NAME =</span> NAME,</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">incomeE_depart =</span> incomeE,</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">incomeM_depart =</span> incomeM,</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">geometry_depart =</span> geometry</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>  ) </span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(census_origin<span class="sc">$</span>GEOID_origin)</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(all_flights<span class="sc">$</span>origin_cbsa)  <span class="co">#the two columns we want to join on are not the same kind of column. So we're going to make GEOID a numeric variable. </span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>census_origin <span class="ot">&lt;-</span> census_origin <span class="sc">%&gt;%</span>  <span class="co">#making GEOID origin numeric</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">GEOID_origin =</span> <span class="fu">as.numeric</span>(GEOID_origin))</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>census_departure <span class="ot">&lt;-</span> census_departure <span class="sc">%&gt;%</span>   <span class="co">#making GEOID departure numeric</span></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">GEOID_depart =</span> <span class="fu">as.numeric</span>(GEOID_depart))</span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(census_origin<span class="sc">$</span>GEOID_origin) <span class="co"># now its numeric</span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(census_departure<span class="sc">$</span>GEOID_depart) <span class="co">#same here</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>all_flights_withcensus <span class="ot">&lt;-</span> all_flights <span class="sc">%&gt;%</span> <span class="co">#joining the datasets together</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(census_origin, <span class="at">by=</span><span class="fu">c</span>( <span class="st">"origin_cbsa"</span> <span class="ot">=</span> <span class="st">"GEOID_origin"</span>)) <span class="sc">%&gt;%</span>  <span class="co">#for origin cbsa</span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(census_departure, <span class="at">by=</span><span class="fu">c</span>(<span class="st">"dest_cbsa"</span> <span class="ot">=</span> <span class="st">"GEOID_depart"</span>)) <span class="co">#for departure cbsa</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a><span class="co"># find a way to make the datasets show cbsa to cbsa volumes using group_by and summarize</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>all_flights_cbsa <span class="ot">&lt;-</span> all_flights_withcensus <span class="sc">%&gt;%</span> <span class="co">#mocing the data to a new obhect so it can be manipulated</span></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(origin_NAME, deaprture_NAME) <span class="sc">%&gt;%</span>  <span class="co">#grouping by these variables</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>( <span class="at">passengers =</span> <span class="fu">sum</span>(passengers)) <span class="co">#summing the passengers based on the groupsof origin and departure cbsa in readable format</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'origin_NAME'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#remove non-metropolitan airports </span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#goal: extract the las two words off the origin name and departure name columns... filter for == Metro Area</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>all_flights_cbsa <span class="ot">&lt;-</span> all_flights_cbsa <span class="sc">%&gt;%</span>  </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>( <span class="at">Metro_dummy =</span> <span class="fu">word</span>(origin_NAME, <span class="sc">-</span><span class="dv">2</span>), <span class="co">#uses stringr to identify the second to last word in both the origin to put into a new column. This should output either Metro or Micro</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">Metro_dummy_dest =</span> <span class="fu">word</span>(deaprture_NAME, <span class="sc">-</span><span class="dv">2</span>))   <span class="co">#Does the same thing for the destination aspect</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(all_flights_cbsa<span class="sc">$</span>Metro_dummy) <span class="co">#both of these return Metro, Micro, and NA, and the NAs are where there are no names associated with the origin or dest place which aren't useful for us anyway</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(all_flights_cbsa<span class="sc">$</span>Metro_dummy_dest)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>all_flights_cbsa <span class="ot">&lt;-</span> all_flights_cbsa <span class="sc">%&gt;%</span>  <span class="co">#filtering down to just the Metro places</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( Metro_dummy <span class="sc">==</span> <span class="st">"Metro"</span>) <span class="sc">%&gt;%</span> <span class="co">#for origin place</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Metro_dummy_dest <span class="sc">==</span> <span class="st">"Metro"</span>) <span class="co">#and destination place</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co">#I'm also going to modify the all_flights_with_census to look more like our filtered data sets ( only metro locations )</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>all_flights_withcensus <span class="ot">&lt;-</span> all_flights_withcensus <span class="sc">%&gt;%</span>  <span class="co">#indicating where we're putting this and replicating the above process</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>( <span class="at">Metro_dummy =</span> <span class="fu">word</span>(origin_NAME, <span class="sc">-</span><span class="dv">2</span>), </span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">Metro_dummy_dest =</span> <span class="fu">word</span>(deaprture_NAME, <span class="sc">-</span><span class="dv">2</span>)) <span class="sc">%&gt;%</span>   </span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( Metro_dummy <span class="sc">==</span> <span class="st">"Metro"</span>) <span class="sc">%&gt;%</span> <span class="co">#filtering down to just the Metro places</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Metro_dummy_dest <span class="sc">==</span> <span class="st">"Metro"</span>)</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a><span class="co">#make scatterplots of origin population and total passengers, destination population and total passengers, and flight distance and total passengers. Describe trends. </span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>scatter_create_2 <span class="ot">&lt;-</span> all_flights_withcensus <span class="sc">%&gt;%</span>  <span class="co">#if I try to use the summarized data I lose a lot of the things I need. So I'm creating a new object with all the variables... plus the passenger one</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(passengers <span class="sc">&gt;=</span> <span class="dv">10000</span>) <span class="sc">%&gt;%</span> <span class="co">#we filtered RDU flights for this earlier but I want to do that here too </span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(origin_NAME, deaprture_NAME) <span class="sc">%&gt;%</span>  <span class="co">#replicating the volume by cbsa group variable creation we did earlier but using mutate to preserve the rest of my data, instead</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">passengers_total =</span> <span class="fu">sum</span>(passengers)) <span class="co">#summing the total passengers going between the cbsa zones</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="co">#there were some outliers in passenger totals so I removed them. </span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>scatter_create_2 <span class="ot">&lt;-</span> scatter_create_2 <span class="sc">%&gt;%</span> </span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(passengers_total <span class="sc">&lt;</span><span class="dv">4000000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The three variables which Reid Consulting chose to investigate for the purpose of identifying potential airports to service were the population at the origin and termination location, as well as the distance of the flight. Here, we expanded our data to include airports beyond RDU. We did this to A) ensure a larger sample size off of which to make more accurate predictions later on and B) in the case that Air Carolina is succesful and wishes to expand their operations beyond the RDU homebase, this data will still be applicable.</p>
+<p>To test the relationship between origin site population and total passengers on flights, we pulled census data for population and matched each airport to the metropolitan area which it served. It is important to note that due to the way population data was sourced, these metrics apply to the volume of passengers moving from geographic area to geographic area, not those moving from one specific airport to another. As Air Carolina is starting its company journey and targetting primarily metropolitan areas, we also filtered out any smaller locals.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#origin pop and passengers</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span>scatter_create_2, <span class="fu">aes</span>(<span class="at">x =</span> populationEorigin, <span class="at">y =</span> passengers_total))<span class="sc">+</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>     <span class="fu">geom_point</span>()<span class="sc">+</span> <span class="co">#we're creating a scatterplot from the scatter_create object, focusing on the populationEogigin and passenger total variables</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()<span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>     <span class="fu">xlab</span>(<span class="st">"Origin CBSA Population"</span>)<span class="sc">+</span> <span class="co">#making it pretty and giving it titles</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>     <span class="fu">ylab</span>(<span class="st">"Passengers"</span>)<span class="sc">+</span> </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">theme</span>(<span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">12</span>),</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW4_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The first variable which we chose to investigate was the population at the site from which a flight was originating. Above, is a scatterplot of the relationship betwen origin population and the number of passengers who flew from area to area. There seems to be a slightly positive relationship between how many people lived in the origin city, and how many passengers took flights out of that city. In lower sections, a more formal trendline for this data is mapped.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">#departure pop and passengers</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span>scatter_create_2, <span class="fu">aes</span>(<span class="at">x =</span> populationE_depart, <span class="at">y =</span> passengers_total))<span class="sc">+</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>     <span class="fu">geom_point</span>()<span class="sc">+</span> <span class="co">#same as above but our x is destination population</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()<span class="sc">+</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>     <span class="fu">xlab</span>(<span class="st">"Destination CBSA Population"</span>)<span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>     <span class="fu">ylab</span>(<span class="st">"Passengers"</span>)<span class="sc">+</span> </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">theme</span>(<span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">12</span>),</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW4_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The second variable which we chose to investigate was the population at the site to which a flight was terminating Above, is a scatterplot of the relationship between a detination’s population and the number of passengers who flew to from area to area. There seems to be a slightly positive relationship between how many people lived in the destination city, and how many passengers took flights to of that city. In lower sections, a more formal trendline for this data is mapped.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#distance to passengers</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">#there was an outlier so I removed it by filtering like so:</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span>scatter_create_2, <span class="fu">aes</span>(<span class="at">x =</span> distancemiles, <span class="at">y =</span> passengers_total))<span class="sc">+</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>     <span class="fu">geom_point</span>()<span class="sc">+</span> <span class="co">#same as above but our x is distance</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()<span class="sc">+</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">xlab</span>(<span class="st">"Flight Distance (miles)"</span>)<span class="sc">+</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>     <span class="fu">ylab</span>(<span class="st">"Passengers"</span>)<span class="sc">+</span> </span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">theme</span>(<span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">12</span>),</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW4_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The final variable which we chose to investigate was the distance which any given flight was traveling. Above, is a scatterplot of the relationship between a flight distance and the number of passengers who flew to from area to area. Although at first glance, there seems to be a negative relationship between distance and how many passengers took flights to of that city, later trendline analysis call this into question. The difference between visible and calcluated trend is interesting here. Perhaps further distances are more exciting, and have fewer alternative transit options, incentivizing air travel. Perhaps we did not have enough density for fair flight paths and this skewed our data. Further research is advised for the relation of distance to passenger count, in particular.</p>
+</section>
+<section id="question-3passenger-volume-regression" class="level2">
+<h2 class="anchored" data-anchor-id="question-3passenger-volume-regression">Question 3:Passenger Volume Regression</h2>
+<p>Our representative created regression models for each of our variables of interest to evaluate the accuracy and reliablity of each of these variables. In addition to evaluating the regressions on numerical basis, each of these regressions were then mapped onto the previously generated scatterplots. They were then visually assesed to see if the trend line appeared to match the datapoints. If the trend line was signifigantly off from what appeared visually, in the graph it is possible that something else, such as outliers or uneven data distribution, could have skewed the reliability of our regression model.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">#we're going to figure out scatter create and associated scatterplots and use that as the data for the regressions</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co">#we're going to do a regression for each first... and have them show us as a table which we will interpret all coefficients of except the constant/intercept</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co">#for origin  pop vs. passengers</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>origin_model <span class="ot">=</span> <span class="fu">lm</span>(passengers_total<span class="sc">~</span>populationEorigin, scatter_create_2) <span class="co">#creates the regression where passengers is the y and origin pop is the x</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(origin_model) <span class="co">#displays regression analysis statistics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = passengers_total ~ populationEorigin, data = scatter_create_2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-728534 -168151  -95119   45856 2303944 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)       1.295e+05  7.604e+03   17.03   &lt;2e-16 ***
+populationEorigin 3.162e-02  1.219e-03   25.95   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 369500 on 4603 degrees of freedom
+Multiple R-squared:  0.1276,    Adjusted R-squared:  0.1274 
+F-statistic: 673.4 on 1 and 4603 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>The above information is a regression for the relation between the origin area’s population to passenger count between areas. The first value of interest here is the estimate for the populationEorigin. This value, 3.162e-02, is the slope of the regression model. Litterally, it means that for every one additional person who lives in the area around the origin airport, there will be, on average, 0.03162 people increase of passengers between areas over 11 months. We can’t actually have 0.03162 people, so another way to think about this is that for every 10,000 people in the city, there will be about a 316 person increase in passengers between areas for an 11 month time period. This is a slightly positive relaitonship, which makes sense. An area with more people will have more people to generate demand for flights, leading to more passengers on all flights.</p>
+<p>The standard errors for both the intercept and slope of the line are relatively small compared to their estimated values, which indicate less uncertainty in our model. This is backed up by our t-values and p values. T avlues are generally considered acceptable if they are over 2. Both our intercept and slope t value exceed that by factors of 8 and 12 respectively, and indicate that the relationship between passenger count and origin population is meaningful. Likewise, p values smaller than 0.05 are considered good, and the p-values for the intercept and slope are both 0.00000000000000002, which is well within that threshold. The model is very statistically signifigant.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>scatter_create_2, <span class="fu">aes</span>( <span class="at">x =</span> populationEorigin, <span class="at">y =</span> passengers_total))<span class="sc">+</span> <span class="co">#plotting the origin population vs. the passenger count</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="fl">1.295e+05</span>, <span class="at">slope =</span> <span class="fl">3.162e-02</span>, <span class="at">color =</span> <span class="st">"red"</span>)<span class="sc">+</span> <span class="co">#fitting and displaying the regression line - this is based on numbers in the linear regression</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">20000000</span>) <span class="sc">+</span> <span class="co">#bounds of the data/ fit</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">0</span>, <span class="dv">3000000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW4_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>However, although the p-value, t-test, and standard error indicate a statistically signifigant relationship between origin population and passenger count, the R squared value is rather small. R squared values measure how well a model fits data, where values. closer to 1 are preffered. The R squared valueof 0.1274 to 0.1276 depending on adjustment, indicates that less than 13% of the “variance” of the model is explained by origin population. So, origin population, while having some effect, is likely not the only thing affecting passenger traffic between areas. nterpret all coefficients in the model (except the constant/intercept). This can also be seen visually in the graph above.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">#for dest pop vs. passengers</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>dest_model <span class="ot">=</span> <span class="fu">lm</span>(passengers_total<span class="sc">~</span>populationE_depart, scatter_create_2)<span class="co">#creates the regression where passengers is the y and dest pop is the x</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(dest_model) <span class="co">#displays regression analysis statistics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = passengers_total ~ populationE_depart, data = scatter_create_2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-731763 -168987  -94408   48276 2330543 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)        1.284e+05  7.599e+03   16.90   &lt;2e-16 ***
+populationE_depart 3.188e-02  1.219e-03   26.15   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 369100 on 4603 degrees of freedom
+Multiple R-squared:  0.1294,    Adjusted R-squared:  0.1292 
+F-statistic:   684 on 1 and 4603 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Next, we calculated a similr regression for the population of the area around the destination. See the regression above. Again, the first value of interest here is the estimate for the slope, or relationship between our variables. This value, 3.188e-02 means that for every one additional person who lives in the area around the destination airport, there will be, on average, 0.03188 increase of passengers from any given other area. Again, we can’t actually have 0.03162 people, so another way to think about this is that for every 10,000 people in the city, there will be about a 319 person increase in passengers to that area for an 11 month time period. Like origin population, this is a slightly positive relaitonship, which makes sense. An area with more people may generate flight demand through people wanting to return home, or through increased attractions and amenities needed for larger populations.</p>
+<p>Similar to the origin popultion, the standard errors for both the intercept and slope of the line are relatively small compared to their estimated values, which indicate low uncertainty in our model. Again, this is backed up by our t-values and p values. Both our intercept and slope t values of 16.99 and 26.15 exceed the statistically significant 2 manyfold. Likewise, our p values of 0.00000000000000002 are much smaller than 0.05. Standard error, p values, and t tests all indicate that the relationship between passenger count and origin population is meaningful. The model for destination population to passenger count is also very statistically signifigant.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>scatter_create_2, <span class="fu">aes</span>( <span class="at">x =</span> populationE_depart, <span class="at">y =</span> passengers_total))<span class="sc">+</span> <span class="co">#plotting the destination population vs. the passenger count</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="fl">1.284e+05</span>, <span class="at">slope =</span> <span class="fl">3.188e-02</span>, <span class="at">color =</span> <span class="st">"red"</span>)<span class="sc">+</span> <span class="co">#fitting and displaying the regression line - this is based on numbers in the linear regression</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">20000000</span>) <span class="sc">+</span><span class="co">#bounds of the data/ fit</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">0</span>, <span class="dv">3000000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW4_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Like the origin population model, although the p-value, t-test, and standard error indicate a statistically signifigant relationship between destination population and passenger count, the R squared value is still rather small. The R squared value of 0.1294 to 0.1292 depending on adjustment, still indicates that less than 13% of the “variance” of the model is explained by destination population. So, like origin population, while having some effect, the destination’s population is not the only thing affecting passenger traffic between areas. This can also be seen visually in spread of the data around the regression line in the scatterplot above.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">#for distance vs. passengers</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>distance_model <span class="ot">=</span> <span class="fu">lm</span>(passengers_total<span class="sc">~</span>distancemiles, scatter_create_2)<span class="co">#creates the regression where passengers is the y and flight distance is the x</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(distance_model) <span class="co">#displays regression analysis statistics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = passengers_total ~ distancemiles, data = scatter_create_2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-367804 -215761 -151716   32547 2358176 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   2.417e+05  9.871e+03  24.481  &lt; 2e-16 ***
+distancemiles 2.851e+01  8.893e+00   3.206  0.00136 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 395200 on 4603 degrees of freedom
+Multiple R-squared:  0.002228,  Adjusted R-squared:  0.002011 
+F-statistic: 10.28 on 1 and 4603 DF,  p-value: 0.001356</code></pre>
+</div>
+</div>
+<p>Our final variable of interest was the distance of flights. Unlike the population data, this regression refers specifically to routes between unique airports, as opposed to metropolitan geographies. Abov is the regression for the relation between flight distance and passenger count. Our slope here is, 2.851e+01 which means that for every additional mile a flight travels, there will be, on average, 29 more people who ride that flight every 11 months. Like our population based varibles this is a positive relaitonship. We can reason that this might be because longer distances have fewer alternate methods of travel, or incite more intrigue for a customer.</p>
+<p>However, the model here is less reliable than the others for a few reasons. First, the R squared values of themodel is 0.002228 to 0.002011, meaning that less than 1% of the variance in the data was explained by this model. The fit of this model is bad mathematically, but we can also see it is a bad fit visually, in the scatterplot below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>scatter_create_2, <span class="fu">aes</span>( <span class="at">x =</span> distancemiles, <span class="at">y =</span> passengers_total))<span class="sc">+</span> <span class="co">#plotting the flight distance vs. the passenger count</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span>  <span class="fl">2.417e+05</span>, <span class="at">slope =</span> <span class="fl">2.851e+01</span>, <span class="at">color =</span> <span class="st">"red"</span>)<span class="sc">+</span> <span class="co">#fitting and displaying the regression line - this is based on numbers in the linear regression</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">5000</span>) <span class="sc">+</span><span class="co">#bounds of the data/ fit</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">0</span>, <span class="dv">3000000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW4_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Additionally, although the regression is still very statistically significant, it is less so that the population based data. Although still significant, it only gets two stars compared to the three for the slope of origin and destination populations. Still, standard errors for both the intercept and slope of the line are relatively small compared to their estimated values. Our T values are both above 2, but again, the 3.206 t value for the relationship between flight distance and passenger count is closer to that threshold than the population data was. The p values are also still below 0.05 at 0.00000000000000002 and 0.00136 for the intercept and slope repectivly. Though not quite as good as the population based data, this model is statistically signifigant. Its real flaw is its poor fit to the data as demonstrated by its R squared value.</p>
+<p>In conclusion, we found that the population of both the origin and destination of a flight, as well as the distance a flight travels have statistically signifigant correlations with passenger count. However, all of these models explain low to almost none of the variance of the models, by themselves. We can say it would likley be beneficial to choose airports with high surrounding popoulations for Air Carolina’s flight destinations, however the actual success of demand between these areas is still somewhat variable.</p>
+</section>
+<section id="question-4-passenger-volume-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="question-4-passenger-volume-prediction">Question 4: Passenger Volume Prediction</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Find data for each of the predictions and compile it into a dataset</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co">#I am manually pulling the populationEorigin and populationE_depart and depart from the dataset </span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co">#all of these are the from RDU side (RDU is origin) </span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>interested_flights <span class="ot">=</span> <span class="fu">tribble</span>(<span class="sc">~</span>populationEorigin, <span class="sc">~</span>populationE_depart,  <span class="sc">~</span>distancemiles, <span class="co">#we're making an object with these variables in it. Below are the values for origin pop, destination pop, and distance for the flight routes indicated. Both to and from RDU are included</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>                           <span class="dv">1362997</span>, <span class="dv">2472774</span> , <span class="dv">2363</span> ,  <span class="co">#RDU to PDX</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>                           <span class="dv">1362997</span>, <span class="dv">841602</span>  , <span class="dv">1606</span> ,  <span class="co">#RDU to ELP</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>                            <span class="dv">1362997</span>, <span class="dv">384783</span> , <span class="dv">496</span>  , <span class="co">#RDU to TLH</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>                            <span class="dv">1362997</span>, <span class="dv">2338866</span> , <span class="dv">2345</span>, <span class="co">#RDU to SMF</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>                           <span class="dv">2472774</span> , <span class="dv">1362997</span> , <span class="dv">2363</span>,  <span class="co">#PDX to RDU</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>                           <span class="dv">841602</span>  , <span class="dv">1362997</span> , <span class="dv">1606</span>, <span class="co">#ELP to RDU</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>                           <span class="fl">384783.</span> , <span class="dv">1362997</span> , <span class="dv">496</span> , <span class="co">#TLH to RDU</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>                           <span class="dv">2338866</span> , <span class="dv">1362997</span> , <span class="dv">2345</span>)  <span class="co">#SMF to RDU</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>final_model <span class="ot">=</span> <span class="fu">lm</span>(passengers_total<span class="sc">~</span>populationEorigin<span class="sc">+</span>populationE_depart<span class="sc">+</span>distancemiles, scatter_create_2)  <span class="co">#creating a model/ multi-variable regression for the association between origing population, destination population, and flight distance to how many passengers will go on a flight</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a> <span class="fu">summary</span>(final_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = passengers_total ~ populationEorigin + populationE_depart + 
+    distancemiles, data = scatter_create_2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-941189 -152469  -32544   69668 1984316 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)        -7.824e+04  1.050e+04  -7.449 1.12e-13 ***
+populationEorigin   4.104e-02  1.100e-03  37.322  &lt; 2e-16 ***
+populationE_depart  4.127e-02  1.101e-03  37.480  &lt; 2e-16 ***
+distancemiles      -1.449e+01  7.334e+00  -1.976   0.0482 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 323400 on 4601 degrees of freedom
+Multiple R-squared:  0.332, Adjusted R-squared:  0.3316 
+F-statistic: 762.2 on 3 and 4601 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Given that our selected variables did not explain high levels of variance by themselves, we aggregated them into a multi-variable regression to see if we could improve our R squared. The results of that aggregated regression are above. As you can see, our R square values did improve some, so that now about 33.2% of our data’s variance can be explained by this model.</p>
+<p>When aggregated together, a one person increase in the origin area’s population corresponds with 0.004104 more passengers, a one person increase in the destination area’s population corresponds with 0.004127 more passengers, and a one mile increase in flight distance corresponds with a 14.49 person decrease in passengers over an 11 month period. Like in the single-model regressions, the origin and destination variables both have small standard error (0.00011 and 0.000101), as well as t values well over above 2 ( 37.322 and 37.480), and p values near 0 (0.00000000000000002). The population variables are still both very statistically signifigant in relation to the passenger count.</p>
+<p>However, we run into more issues with our flight distance variable. First, the relationship between flight distance and passenger count has now reversed. Where it was a positive relationship before, it is now a negative relatinoship. While the standard error is still relaatively low, the t value and p value are both approaching the bounds of what is statistically signifigant. The t value is -1.976 which is very close to the absolute value fo 2, which is prefered. T values nearing 1.96 are often still accepted, so this barely makes the cutoff. Likewise the p value is 0.0482, which is very close to the 0.05 cut off of what a good p value is. So, between the variable relationship between flight distance and passenger count, as well as the slim margin by which this variable is still considered statistically signifigant, the distance variable more uncertain in its relation to passenger count.</p>
+<p>But, because this model explained the most variance in our data, we used it for our final predictions.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Now we are using our model to predict what the values in our interested flights will look like</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a> interested_flights<span class="sc">$</span>forecast_flight <span class="ot">=</span> <span class="fu">predict</span> (final_model, interested_flights)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>interested_flights</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 4
+  populationEorigin populationE_depart distancemiles forecast_flight
+              &lt;dbl&gt;              &lt;dbl&gt;         &lt;dbl&gt;           &lt;dbl&gt;
+1           1362997            2472774          2363          45515.
+2           1362997             841602          1606         -10839.
+3           1362997             384783           496         -13609.
+4           1362997            2338866          2345          40249.
+5           2472774            1362997          2363          45257.
+6            841602            1362997          1606         -10718.
+7            384783            1362997           496         -13381.
+8           2338866            1362997          2345          40022.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>  interested_flights <span class="ot">&lt;-</span> interested_flights <span class="sc">%&gt;%</span>  <span class="co">#here I'm adding a variable to describe the flight path so I can understand my data better. </span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>( <span class="at">flight_path =</span>  <span class="fu">c</span>(<span class="st">"RDU to PDX"</span>, </span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"RDU to ELP"</span>, </span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"RDU to TLH"</span>, </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"RDU to SMF"</span>, </span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"PDX to RDU"</span>, </span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"ELP to RDU"</span>, </span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"TLH to RDU"</span>, </span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"SMF to RDU"</span> )) <span class="sc">%&gt;%</span> </span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="st">"Origin Population"</span> <span class="ot">=</span> populationEorigin,  <span class="co">#I'm also colmn tyding up names for their display</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>         <span class="st">"Destination Population"</span> <span class="ot">=</span> populationE_depart, </span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>         <span class="st">"Distance (Miles)"</span> <span class="ot">=</span> distancemiles, </span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>         <span class="st">"Forecasted Demand"</span> <span class="ot">=</span> forecast_flight, </span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>         <span class="st">"Flight Path"</span> <span class="ot">=</span> flight_path)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">#create a table with forecasted demand (displaying the datatable we created)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>flight_demand <span class="ot">&lt;-</span> <span class="fu">select</span>(interested_flights, <span class="st">"Flight Path"</span>, <span class="st">"Forecasted Demand"</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>flight_demand</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 2
+  `Flight Path` `Forecasted Demand`
+  &lt;chr&gt;                       &lt;dbl&gt;
+1 RDU to PDX                 45515.
+2 RDU to ELP                -10839.
+3 RDU to TLH                -13609.
+4 RDU to SMF                 40249.
+5 PDX to RDU                 45257.
+6 ELP to RDU                -10718.
+7 TLH to RDU                -13381.
+8 SMF to RDU                 40022.</code></pre>
+</div>
+</div>
+<p>Our representative calculated the estimated number of passengers for a given flight from RDU to PDX, ELP, TLH, and SMF, and the reverse, back to RDU. The forecasted demand for each of these flights is listed above. As you can see, some of these values are highly unlikely. In fact, it is impossible to have negative passengers between locations. We beleive the variability of the flight distance variable, as well as the lower intercept in the multi-variable regression may have made the model more unpredictable. Likewise, with only R squared value corresponding with 33% of the variance accounted for our prediction will not be perfect. Our confidence in this model is quite low.</p>
+<p>Still, we can still gain some insight from the predictions. Based on just flight distance and the populations of the cities between which a plane is flying alone, the flight we expect to be most popular and therefore viable for exploration via Air Carolina is the one from RDU to PDX, followed by the one from PDX to RDU. Thus, based on these models, our reccomendation would be for Air Carolina to invest in a flight service with PDX.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
