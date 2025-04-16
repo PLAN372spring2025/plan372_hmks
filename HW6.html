@@ -308,6 +308,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>In order to better measure what trees are best suited to shade, and ensure no confounding variables, our analyst plotted the average age of each genus in our sample. For the most part these ages hovered around 15-40 years old, however there were also outliers over 60 years old or near 0. If doing future modeling, we would likely filter to exclude trees whose ages are less than 5, as they will not have had long enough to grow to have much of a crown at all. Because of the variations in this data, it is possible that age had an impact on the average canopy size of diferent genus in the previous question. Still, the quercus genus which we had found to have the highest average canopy size has an average age of about 29 years, which is in the mid-range of our data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>EC_fast <span class="ot">&lt;-</span> EC <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Genus) <span class="sc">%&gt;%</span>  <span class="co">#group by genus</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>( <span class="at">Average_Age =</span> <span class="fu">mean</span>(Age), </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">Avg_Crown =</span> <span class="fu">mean</span>(AvgCdia..m.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>( <span class="at">Average_Age_color  =</span> <span class="fu">case_when</span>(  <span class="co">#creating the final species column</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>      Average_Age <span class="sc">&lt;=</span> <span class="dv">20</span> <span class="sc">~</span> <span class="st">"Less than 20"</span>, <span class="co">#specifying that when the species is unkown, the column should read the genus name and the unspecified</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>      Average_Age <span class="sc">&lt;=</span> <span class="dv">40</span> <span class="sc">~</span> <span class="st">"20-40"</span>, </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>      Average_Age <span class="sc">&gt;=</span><span class="dv">40</span> <span class="sc">~</span> <span class="st">"Over 40"</span>, </span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"NA"</span> ))</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(EC_fast, <span class="fu">aes</span>( Genus, Avg_Crown, <span class="at">color =</span> Average_Age_color))<span class="sc">+</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Genus Crown Size with Age Component"</span>,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Figure EC-2"</span>)<span class="sc">+</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="fu">ylab</span>(<span class="st">"Average Crown Diameter (m)"</span>)<span class="sc">+</span> <span class="co">#adding labels</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">size =</span> <span class="dv">7</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="HW6_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>EC_final <span class="ot">&lt;-</span> EC_fast <span class="sc">%&gt;%</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Average_Age <span class="sc">&lt;=</span> <span class="dv">20</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Average_Age_color)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>EC_final <span class="sc">|&gt;</span> <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> <span class="fu">arrange</span>(<span class="sc">-</span>Avg_Crown)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 21 × 3
+   Genus        Average_Age Avg_Crown
+   &lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;
+ 1 zelkova             18.1     12.3 
+ 2 morus               17.9     12.3 
+ 3 prosopis            17        9.27
+ 4 aesculus            -1        9.12
+ 5 parkinsonia         18.2      7.95
+ 6 pistacia            19.2      7.40
+ 7 koelreuteria        19.2      7.23
+ 8 cercis              -1        7.18
+ 9 prunus              20.0      7.12
+10 triadica            14.2      7.11
+# ℹ 11 more rows</code></pre>
+</div>
+</div>
+<p>When factoring in Average ages under 20 years old, the genus with the largest average crown is zelkova. In other words, if the city want a short term shade return on investment, zelkova or morus would be the way to go.</p>
 </section>
 
 </main>
