@@ -1,0 +1,188 @@
+---
+title: "HW 6"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+Data <- read.csv("/Users/celestereid/Documents/PLAN372/PLAN372_2/plan372_hmks/HW 6/TS3_Raw_tree_data.csv") #importing data
+
+Data <- Data %>%  #creating new variabled for the state and city
+  mutate(State = str_extract(City, "([:alpha:]+)$"), 
+         Town = str_replace_all(City, "([:alpha:]+)$", " "), #getting rid of the state portion to make a city column
+          city = str_replace_all(Town, "[:punct:]", " ")) %>% #getting rid of leftover puntiation int he new city column
+  select( - c(Town)) %>%  #getting rid of my transition column
+  rename(City_State = City, #renaming my variables so they make sense
+         City = city)
+      
+#Now group by City and Count all of them 
+
+State_Count <- Data %>% 
+  group_by(State) %>%  #grouping by state
+  summarize(Count = n()) #summarizing to see how many trees were in each state
+```
+
+## Reid Consulting Studios:
+
+Reid Consulting Studio’s analyst summarized key findings in the biodiversity and shade cover of trees to prepare analysis of A) the biodiversity of trees surveyed across states and B) how different tree genuses correspond to crown cover and potential shade abilities. 
+
+Our consulting firm highly values transparency and has included our representative’s coding work, should there be any questions on our methodologies.
+
+## Question 1: Sample Sizes by State
+
+```{r}
+ggplot()+ #graphing how many trees were sampled in each state
+  geom_col( data = State_Count, aes(State, Count))+ #pulling data
+  labs(
+  title = "Sampled Trees in each State",
+  caption = "Figure 1")+
+ylab("Tree Count")+ #adding labels
+  theme_minimal()
+
+```
+
+Figure 1 displays how many trees were associated with each state in the dataset. As is apparent in the data, California had the most sample by around four times any other state. The rests of the states hovered between around 750 and 1000 samples each. 
+
+
+## Question 2: Cities in NC/SC
+
+```{r}
+Carolinas <- Data %>%  #filtering my dataset to just be in NC and SC
+  filter(State %in% c("NC", "SC"))
+
+Summary <- Carolinas %>%  #getting just one row for each 
+  distinct(State, City) 
+
+#unique(Carolinas$City) checking to make sure there really was only one city per state
+
+Summary |> as_tibble()
+  
+  
+```
+
+
+Now that we have a sense of the distribution of our dataset, Reid Consulting Studios narrowed in on the geographic area most relevant to our case study, the North Carolina and South Carolina region. In the above table you can see that only one city was sampled in North Carolina and one in South Carolina. These cities were Charlotte in NC and Charleston in South Carolina. This is important to note as we continue our analysis as there may be bias in the limited distribution of trees across the state.  
+
+## Question 3: Genera and Species part 1
+
+
+```{r}
+#unique(Carolinas$ScientificName) #checking that each genus and species is only one word long
+
+Carolinas <- Carolinas %>%  #extracting Genus, the first word in the Scientific Name column
+  mutate(Genus = str_extract(ScientificName, "(^[:alpha:]+)"), 
+         Genus = str_to_lower(Genus)) #ensuring that any differences in capitals won't be counted differently
+
+Carolina_genus <- Carolinas %>% #calculating the mean of the crown of each genus
+  group_by(Genus) %>%  #group by genus
+  summarize( Crown_size = mean(AvgCdia..m.)) #find the mean crown size of each genus
+
+#display the maximum prettier and with the name of the genus from highest to lowest crown diameter
+Carolina_genus |> as_tibble() |> arrange(-Crown_size) |> select(Genus, Crown_size)
+         
+```
+Reid Studio's analyst calulated the crown size of trees in meters. This was done by genus, so when planting it is important to note that there may be variation among different species within the genus. Still, it appears the quercus genus has the largest crown size at 13.6 meters. If planting for shade cover quercus, platanus, or acer trees may be the cities best bet. 
+
+## Question 4: Genera and Species part 2
+
+```{r}
+#unique(Data$ScientificName) #getting a sense of the data we have
+
+Data <- Data %>%  #extracting genus from the larger dataset 
+  mutate(Genus = str_extract(ScientificName, "(^[:alpha:]+)"),  #extracting the first word aka the genus
+         Genus = str_to_lower(Genus)) #putting everything in lower case to make sure any capitalization errors don't affect outputs
+
+sp_species <- Data %>%  #creating a new object to manipulate species
+   mutate(ScientificName = str_replace(ScientificName, "\\.$", ""),  #getting rid of any periods at the end of the datasets (important for those ending with sp. and cvs. )
+          sp_test = ifelse(str_detect(str_to_lower(ScientificName), "sp$"), 1, 0),  #identifying columns with sp at the end (these were columns with the genus listed but not the species)
+          No_cultivar = str_replace_all(ScientificName, "('[:alpha:]+)'$", ""), #getting rid of all the cultivar names which were designated by being in ''
+         No_genus = str_replace_all(No_cultivar, "^([:alpha:]+) ", ""), #getting rid of all the genus names at the front of the column
+         No_x = str_replace_all(No_genus, "^x ", ""), #getting rid of any unneccisary xs denoting hybrid staus
+         No_var = str_replace_all(No_x, "var. ([:alpha:]+)$", ""), #getting rid of any variety indicators at the end of the strings 
+         No_subsp = str_replace_all(No_var, "subsp. ([:alpha:]+)$", ""), # removing  of subspecies indicators
+         No_cvs = str_replace_all(No_subsp, "cvs$", ""), #removing the cvs indicator
+         Species = case_when(  #creating the final species column
+      sp_test == 1 ~ paste(Genus, "unspecified"), #specifying that when the species is unkown, the column should read the genus name and the unspecified
+      sp_test == 0 ~ No_cvs, #otherwise using the cleaned species name
+      TRUE ~ "NA" ))
+
+Identifed_only <- sp_species %>% #filtering to just the trees which we know the species of
+  filter( sp_test == 0) %>% 
+  group_by(Genus) %>% #grouping by genus
+  summarize(Species = n_distinct(Species))  #summarizing how many distinct/unique species names existed for each genus
+
+Identifed_only |> as_tibble() |> arrange(-Species) #displaying from most species to least
+
+```
+
+Back at the country-wide level (at least among states within our dataset), we were also interested in biodiversity. Our analyst calculated the number of species present for each genus around the country. There are further varieities within some of the genuses, and there were also a few trees which had only the genus, and not the species recorded. Our data analyst was and is not an expert on botnary, nor the naming of tree species and briefly consulted Prof. El-Khatabbi on the nomenclature of trees in the data set. Despite initial consultation, further research and examination of the data determined that trees ending in sp. meant that the species was not recorded but may have existed. For instance, within the dataset there existed the Prunus genus which had multiple species attached to it (cerasifera, carolniana, etc.), as well as a few "Prunus sp." records. We ommitted the records containing sp. from our final species count, however our sp_species dataset includes these trees as their Genus, followed by the word "Unspecified" in the final species column. It was determined that nation wide the pinus genus of trees has the most variety of species, at 15. This was closely followed by the quercus genus (13 species), and the fraxinus genus (11 species). Our earlier data modeling suggested that the quercus genus would also offer the most shade cover. Further research into which species of quercus would be best for this may be prudent given the relatviely alrge variation within the genus.
+
+
+## Extra Credit
+
+```{r}
+EC <- sp_species %>% 
+  select(Age, Genus, AvgCdia..m.)
+
+EC_agetable <- EC %>% #calculating the mean of the age of each genus
+  group_by(Genus) %>%  #group by genus
+  summarize( Average_Age = mean(Age)) #find the mean age of each genus
+
+  EC_agetable  |> as_tibble() |> arrange(-Average_Age) 
+  
+  ggplot()+
+    geom_point(data = EC_agetable, aes( Genus, Average_Age))+
+    theme_classic()+
+      labs(
+  title = "Average Age of Tree Genuses",
+  caption = "Figure EC-1")+
+ylab("Average Age (years)")+ #adding labels
+  theme(axis.text.x = element_text(angle = 90, size = 7))
+
+    
+```
+
+
+In order to better measure what trees are best suited to shade, and ensure no confounding variables, our analyst plotted the average age of each genus in our sample. For the most part these ages hovered around 15-40 years old, however there were also outliers over 60 years old or near 0. If doing future modeling, we would likely filter to exclude trees whose ages are less than 5, as they will not have had long enough to grow to have much of a crown at all. Because of the variations in this data, it is possible that age had an impact on the average canopy size of diferent genus in the previous question. Still, the quercus genus which we had found to have the highest average canopy size has an average age of about 29 years, which is in the mid-range of our data. 
+
+
+
+```{r}
+EC_fast <- EC %>% 
+  group_by(Genus) %>%  #group by genus
+  summarize( Average_Age = mean(Age), 
+             Avg_Crown = mean(AvgCdia..m.)) %>% 
+  mutate( Average_Age_color  = case_when(  #creating the final species column
+      Average_Age <= 20 ~ "Less than 20", #specifying that when the species is unkown, the column should read the genus name and the unspecified
+      Average_Age <= 40 ~ "20-40", 
+      Average_Age >=40 ~ "Over 40", 
+      TRUE ~ "NA" ))
+
+
+ggplot(EC_fast, aes( Genus, Avg_Crown, color = Average_Age_color))+
+  geom_point()+
+  labs(
+  title = "Genus Crown Size with Age Component",
+  caption = "Figure EC-2")+
+ylab("Average Crown Diameter (m)")+ #adding labels
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, size = 7))
+ 
+
+
+
+```
+
+```{r}
+EC_final <- EC_fast %>% 
+  filter(Average_Age <= 20) %>% 
+  select(-Average_Age_color)
+
+
+ 
+
+EC_final |> as_tibble() |> arrange(-Avg_Crown)
+
+```
+When factoring in Average ages under 20 years old, the genus with the largest average crown is zelkova. In other words, if the city want a short term shade return on investment, zelkova or morus would be the way to go.
