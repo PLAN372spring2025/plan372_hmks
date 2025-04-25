@@ -146,18 +146,39 @@ finalmap1
 
 
 ```{r}
+#regression to analyze relationship between % income spent on transportation and transit service
+
+#create percentage income spent on transport variable 
+data$PctTransportCosts <- (data$transport_costs / data$income) * 100
+
+#remove outlier which seems to be faulty data
+data$PctTransportCosts[data$PctTransportCosts > 100] = NA
+
+fit1 <- lm(TransitFrequency ~ PctTransportCosts, data=data)
+summary(fit1)
+
+#plot the data and trend line
+ggplot(data, aes(x=PctTransportCosts, y=TransitFrequency)) + 
+  geom_point() + 
+  geom_abline(intercept = 21.9796, slope = 0.9838, size=1, color="blue") + 
+  coord_cartesian(ylim = c(0,1000)) +
+  labs(x="Percentage of Income Spent on Transportation", y="Transit Frequency Per Square Mile") +
+  theme(axis.title = element_text(size=16))
+```
+
+```{r}
 #regression to analyze relationships between income and transit service
 
 #create segmented income variable to better analyze the relationship
 data$income_thousands <- data$income / 1000
 
-fit1 <- lm(TransitFrequency ~ income_thousands, data=data)
-summary(fit1)
+fit2 <- lm(TransitFrequency ~ income_thousands, data=data)
+summary(fit2)
 ```
 
 ```{r, results=FALSE, message=FALSE}
 summary(data$transport_costs)
-summary(data$income_thousands) #THE INCOME IS CAPPED AT 250K THIS EXPLAINS WHY THE REGRESSION DOESN'T SHOW THE RELATIONSHIP I WOULD EXPECT 
+summary(data$income_thousands) #THE INCOME IS CAPPED AT 250K. This causes issues for regression interpretation. 
 length(data$income_thousands == 250.001) #There are 555 entries that show 250k income but highly likely that many of them are substantially higher 
 ```
 
@@ -171,27 +192,6 @@ ggplot(data = data, aes(x=income_thousands, y=TransitFrequency)) +
   labs(x="Yearly Income in Thousands of Dollars", y="Transit Frequency Per Square Mile") +
   theme(axis.title = element_text(size=16))
 
-```
-
-```{r}
-#regression to analyze relationship between % income spent on transportation and transit service
-
-#create percentage income spent on transport variable 
-data$PctTransportCosts <- (data$transport_costs / data$income) * 100
-
-#remove outlier which seems to be faulty data
-data$PctTransportCosts[data$PctTransportCosts > 100] = NA
-
-fit2 <- lm(TransitFrequency ~ PctTransportCosts, data=data)
-summary(fit2)
-
-#plot the data and trend line
-ggplot(data, aes(x=PctTransportCosts, y=TransitFrequency)) + 
-  geom_point() + 
-  geom_abline(intercept = 21.9796, slope = 0.9838, size=1, color="blue") + 
-  coord_cartesian(ylim = c(0,1000)) +
-  labs(x="Percentage of Income Spent on Transportation", y="Transit Frequency Per Square Mile") +
-  theme(axis.title = element_text(size=16))
 ```
 
 ## Jobs Per Acre and Number of Low Wage Workers (Workplace)
