@@ -1,0 +1,2 @@
+Second session of class
+This is my first time making changes to this file.
