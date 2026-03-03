@@ -1,0 +1,3 @@
+Hi my name is Karthik Bobba, sophomore, econ major and data science minor.
+
+Value from R: 33.9
