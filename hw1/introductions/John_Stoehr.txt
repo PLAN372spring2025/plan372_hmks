@@ -1,0 +1,10 @@
+Name: John Stoehr
+
+Introduction:
+- Senior
+- Economics Major
+- From Charlotte, NC
+- Has a lot of plants
+
+R Studio Test Answer:
+- 33.9
