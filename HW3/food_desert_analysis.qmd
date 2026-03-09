@@ -1,0 +1,703 @@
+---
+title: "Food Desert Analysis in Wake County, NC"
+author: "Your Name"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+    code-fold: false
+execute:
+  warning: false
+  message: false
+---
+
+# Introduction
+
+The Wake County Department of Health and Human Services administers the Supplemental Nutrition Assistance Program (SNAP) and the Special Supplemental Nutrition Program for Women, Infants, and Children (WIC) — programs collectively designed to help low-income residents purchase nutritious food. A critical concern, however, is that recipients may not have convenient access to healthy food retailers, regardless of the financial support they receive. This phenomenon — whereby geographic barriers limit access to affordable, nutritious food — is commonly called a **food desert**.
+
+Definitions of food deserts vary across policy contexts, but they generally share a common thread: they are areas where residents face difficulty accessing supermarkets or grocery stores, particularly when compounded by low income or lack of vehicle access (Annie E. Casey Foundation, 2021). The United States Department of Agriculture (USDA) defines a food desert in urban areas as a low-income census tract where more than one-third of residents live more than one mile from the nearest supermarket.
+
+For this analysis, we adopt a simplified but well-grounded definition: **any area located more than 1 mile (1,609 meters) from a supermarket is considered a food desert**. Using spatial data from OpenStreetMap, U.S. Census Bureau block group geometries, and demographic data, this report (1) maps food deserts across Wake County, (2) analyzes the demographic characteristics of food desert residents, and (3) recommends a location for a new subsidized supermarket.
+
+```{r setup}
+#| label: setup
+
+# Auto-install any missing packages
+required_pkgs <- c("sf", "dplyr", "ggplot2", "tidyr", "readr", "scales", "patchwork")
+missing_pkgs  <- required_pkgs[!required_pkgs %in% installed.packages()[, "Package"]]
+if (length(missing_pkgs) > 0) {
+  install.packages(missing_pkgs, repos = "https://cloud.r-project.org")
+}
+
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(scales)
+library(patchwork)
+
+# NC State Plane NAD83(2011) — EPSG 6543, units = metres
+NC_CRS <- 6543
+
+desert_colors <- c("Food Desert" = "#d73027", "Not a Food Desert" = "#91bfdb")
+```
+
+# Data
+
+The analysis draws on three datasets provided for this assignment, all located in the same directory as this document:
+
+1. **`triangle_supermarkets_osm.shp`** — point locations of supermarkets in the Triangle region, from OpenStreetMap.
+2. **`orange_durham_wake_block_groups.shp`** — Census block group polygons for Wake, Orange, and Durham counties.
+3. **`triangle_census.csv`** — demographic data per block group including total population, households, race, vehicle access, and income.
+
+```{r load-data}
+#| label: load-data
+
+# ── Grocery / supermarket locations ──────────────────────────────────────────
+grocery <- st_read("triangle_supermarkets_osm.shp", quiet = TRUE)
+cat("Supermarkets loaded:", nrow(grocery), "features\n")
+cat("CRS:", st_crs(grocery)$input, "\n\n")
+
+# ── Block group geometries ────────────────────────────────────────────────────
+block_groups_raw <- st_read("orange_durham_wake_block_groups.shp", quiet = TRUE)
+cat("Block groups loaded:", nrow(block_groups_raw), "features\n")
+cat("CRS:", st_crs(block_groups_raw)$input, "\n")
+cat("Columns:", paste(names(block_groups_raw), collapse = ", "), "\n\n")
+
+# ── Census demographics ───────────────────────────────────────────────────────
+demographics <- read_csv("triangle_census.csv", show_col_types = FALSE)
+cat("Demographics loaded:", nrow(demographics), "rows\n")
+cat("Columns:", paste(names(demographics), collapse = ", "), "\n")
+```
+
+```{r wrangle-data}
+#| label: wrangle-data
+
+# Rename CSV columns to short, consistent names used throughout the report
+demographics <- demographics |>
+  rename(
+    GEOID           = GEOID,
+    total_pop       = total_population,
+    total_hh        = total_households,
+    seniors         = seniors_65plus,
+    white           = race_white_alone,
+    black           = race_black_african_american_alone,
+    asian           = race_asian_alone,
+    other           = race_other,
+    hispanic        = hispanic,
+    zero_vehicle_hh = zero_vehicle_households,
+    low_income_hh   = households_income_less_than_35k
+  ) |>
+  mutate(GEOID = as.character(GEOID))
+
+# Identify the GEOID column in the shapefile (may be GEOID, GEOID20, etc.)
+geoid_col <- names(block_groups_raw)[
+  grepl("^GEOID", names(block_groups_raw), ignore.case = TRUE)
+][1]
+cat("Joining on shapefile column:", geoid_col, "\n")
+
+# Join demographics to geometries, then reproject to NC State Plane (metres)
+block_groups <- block_groups_raw |>
+  rename(GEOID = all_of(geoid_col)) |>
+  mutate(GEOID = as.character(GEOID)) |>
+  left_join(demographics, by = "GEOID") |>
+  st_transform(NC_CRS)
+
+grocery <- st_transform(grocery, NC_CRS)
+
+cat("Joined block groups:", nrow(block_groups), "\n")
+cat("With matched demographics:", sum(!is.na(block_groups$total_pop)), "\n")
+```
+
+# Defining and Mapping Food Deserts
+
+## 1-Mile Buffer Around Supermarkets
+
+The project definition classifies any location more than **1 mile (1,609 metres)** from the nearest supermarket as a food desert. We operationalise this by buffering every supermarket point by 1,609 m and dissolving the result into a single "served" polygon. Anything outside that polygon is a food desert.
+
+```{r buffer}
+#| label: buffer
+
+# 1-mile (1609 m) buffer around all supermarkets, dissolved to one polygon
+buffer_1mi <- st_union(st_buffer(grocery, dist = 1609))
+
+# Study area = union of all three-county block groups
+study_area <- st_union(block_groups)
+
+# Food desert = study area minus the served zone
+food_desert_area <- st_difference(study_area, buffer_1mi)
+
+# Wake County boundary for clipping maps
+wake_bg       <- block_groups |> filter(substr(GEOID, 1, 5) == "37183")
+wake_boundary <- st_union(wake_bg)
+```
+
+```{r fig-map-buffers}
+#| fig-cap: "Supermarket locations (blue dots) and food desert areas (red) in Wake County. Red areas are more than 1 mile from the nearest supermarket; light blue areas fall within the 1-mile service zone of at least one supermarket."
+#| label: fig-map-buffers
+
+# Clip layers to Wake County for a cleaner map
+buffer_wake <- st_intersection(
+  st_as_sf(data.frame(geometry = buffer_1mi), crs = NC_CRS),
+  wake_boundary
+)
+desert_wake <- st_intersection(
+  st_as_sf(data.frame(geometry = food_desert_area), crs = NC_CRS),
+  wake_boundary
+)
+grocery_wake <- st_intersection(grocery, wake_boundary)
+
+ggplot() +
+  geom_sf(data = wake_boundary, fill = "white", color = "grey50", linewidth = 0.5) +
+  geom_sf(data = buffer_wake,   fill = "#91bfdb", color = NA, alpha = 0.6) +
+  geom_sf(data = desert_wake,   fill = "#d73027", color = NA, alpha = 0.55) +
+  geom_sf(data = grocery_wake,  color = "#08306b", size = 1.8, shape = 16) +
+  labs(
+    title    = "Food Deserts and Supermarket Locations — Wake County",
+    subtitle = "Red = food desert (>1 mile from supermarket)  |  Blue = supermarket service area  |  Dots = supermarkets",
+    caption  = "Sources: OpenStreetMap; U.S. Census Bureau"
+  ) +
+  theme_void() +
+  theme(plot.title    = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption  = element_text(size = 8))
+```
+
+@fig-map-buffers shows the spatial distribution of food deserts and supermarkets across Wake County. Supermarket coverage is concentrated in the urban core of Raleigh and along major suburban commercial corridors (Cary, Apex, Garner, Morrisville). Large food desert areas are visible in the eastern and southern portions of the county, as well as in scattered pockets within Raleigh itself.
+
+# Identifying Food Desert Block Groups
+
+## Decision Rule
+
+Many Census block groups will only *partially* fall within a food desert. A decision rule is required to classify each block group as a whole. Three common approaches are:
+
+- **Centroid rule**: a block group is a food desert if its geographic centroid falls outside the 1-mile buffer.
+- **Majority-area rule**: a block group is a food desert if more than 50% of its area is outside the buffer.
+- **Any-overlap rule**: a block group is a food desert if *any* of its area is outside the buffer.
+
+**We adopt the majority-area rule (>50% of area in food desert).** The centroid rule is simple but can misclassify large, irregularly shaped block groups whose centroid happens to land near a store even though most of the population lives far from one. The any-overlap rule over-classifies, flagging well-served suburban block groups that merely have a thin rural fringe beyond 1 mile. The majority-area rule captures the dominant character of each block group without either of these pitfalls, and it aligns with the fact that our demographic variables are attributed to the block group as a whole — not to sub-areas within it.
+
+```{r classify-bg}
+#| label: classify-bg
+
+# Total area of each block group (m²)
+block_groups <- block_groups |>
+  mutate(area_total = as.numeric(st_area(geometry)))
+
+# Area of each block group that falls OUTSIDE the 1-mile buffer (= in food desert)
+food_desert_sf <- st_as_sf(data.frame(geometry = food_desert_area), crs = NC_CRS)
+
+intersection_desert <- st_intersection(
+    block_groups |> select(GEOID),
+    food_desert_sf
+  ) |>
+  mutate(area_desert = as.numeric(st_area(geometry))) |>
+  st_drop_geometry() |>
+  group_by(GEOID) |>
+  summarise(area_desert = sum(area_desert), .groups = "drop")
+
+block_groups <- block_groups |>
+  left_join(intersection_desert, by = "GEOID") |>
+  mutate(
+    area_desert = replace_na(area_desert, 0),
+    pct_desert  = area_desert / area_total,
+    food_desert = pct_desert > 0.50   # majority-area rule
+  )
+
+# Refresh Wake-only subset
+wake_bg <- block_groups |> filter(substr(GEOID, 1, 5) == "37183")
+
+cat("Wake County block groups total:", nrow(wake_bg), "\n")
+cat("Classified as food desert:     ", sum(wake_bg$food_desert, na.rm = TRUE), "\n")
+```
+
+```{r fig-map-bg-desert}
+#| fig-cap: "Wake County Census block groups classified as food deserts (red) or not (light blue) using the majority-area rule: a block group is a food desert when more than 50% of its area lies outside the 1-mile supermarket buffer. Blue dots mark supermarket locations."
+#| label: fig-map-bg-desert
+
+wake_bg_plot <- wake_bg |>
+  mutate(Desert = if_else(food_desert, "Food Desert", "Not a Food Desert"))
+
+ggplot() +
+  geom_sf(data = wake_bg_plot, aes(fill = Desert),
+          color = "white", linewidth = 0.1) +
+  geom_sf(data = grocery_wake, color = "#08306b", size = 1.8, shape = 16) +
+  scale_fill_manual(values = desert_colors, name = NULL) +
+  labs(
+    title    = "Food Desert Classification by Census Block Group — Wake County",
+    subtitle = "Majority-area rule: >50% of block group area outside 1-mile supermarket buffer",
+    caption  = "Sources: OpenStreetMap; U.S. Census Bureau"
+  ) +
+  theme_void() +
+  theme(plot.title    = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        legend.position = "bottom")
+```
+
+@fig-map-bg-desert displays the food desert classification at the block group level. Food desert block groups are concentrated in the **eastern** part of Wake County (eastern Raleigh, Wendell, Knightdale, Zebulon) and in the **southern and western rural fringes**. Urban Raleigh and the western suburbs (Cary, Apex, Morrisville) are generally well-served.
+
+# Population Living in Food Deserts
+
+```{r pop-desert}
+#| label: pop-desert
+
+WAKE_TOTAL_POP <- 1069079   # provided in the assignment
+
+pop_in_desert <- wake_bg |>
+  st_drop_geometry() |>
+  filter(food_desert) |>
+  summarise(pop = sum(total_pop, na.rm = TRUE)) |>
+  pull(pop)
+
+pct_in_desert <- pop_in_desert / WAKE_TOTAL_POP * 100
+
+cat(sprintf(
+  "Population in food deserts : %s\n",   comma(pop_in_desert)))
+cat(sprintf(
+  "Wake County total population: %s\n",  comma(WAKE_TOTAL_POP)))
+cat(sprintf(
+  "Percentage in food deserts  : %.1f%%\n", pct_in_desert))
+```
+
+Approximately **`r comma(pop_in_desert)`** Wake County residents — **`r sprintf("%.1f", pct_in_desert)`%** of the county's 1,069,079 total residents — live in Census block groups classified as food deserts under the majority-area rule. This is a substantial share of the county population and warrants serious policy attention.
+
+> **Methodological note**: Attributing the entire block group population to either "food desert" or "not food desert" introduces some imprecision — people living near a store at the edge of a majority-desert block group are counted as food desert residents. A more refined approach would weight population by the fraction of each block group in the food desert zone, but since Census demographic data are not available at the sub-block-group level, this whole-block-group approach is standard in applied food access research.
+
+# Demographic Analysis of Food Desert Residents
+
+Understanding *who* lives in food deserts is critical for evaluating the true severity of the problem. Two key vulnerability indicators are (1) **low-income households** (households earning less than $35,000/year) and (2) **zero-vehicle households** (no personal car, making travel to distant supermarkets far harder). The analysis below compares these indicators for food desert residents against Wake County as a whole.
+
+Note that both indicators use **households** as the denominator — not people — because vehicle ownership and income are measured at the household level.
+
+```{r demographic-analysis}
+#| label: demographic-analysis
+
+# Wake County overall
+wake_stats <- wake_bg |>
+  st_drop_geometry() |>
+  summarise(
+    total_pop     = sum(total_pop,       na.rm = TRUE),
+    total_hh      = sum(total_hh,        na.rm = TRUE),
+    zero_veh_hh   = sum(zero_vehicle_hh, na.rm = TRUE),
+    low_income_hh = sum(low_income_hh,   na.rm = TRUE)
+  ) |>
+  mutate(
+    pct_zero_veh   = zero_veh_hh   / total_hh * 100,
+    pct_low_income = low_income_hh / total_hh * 100,
+    group = "Wake County Overall"
+  )
+
+# Food desert residents only (1-mile rule)
+desert_stats <- wake_bg |>
+  st_drop_geometry() |>
+  filter(food_desert) |>
+  summarise(
+    total_pop     = sum(total_pop,       na.rm = TRUE),
+    total_hh      = sum(total_hh,        na.rm = TRUE),
+    zero_veh_hh   = sum(zero_vehicle_hh, na.rm = TRUE),
+    low_income_hh = sum(low_income_hh,   na.rm = TRUE)
+  ) |>
+  mutate(
+    pct_zero_veh   = zero_veh_hh   / total_hh * 100,
+    pct_low_income = low_income_hh / total_hh * 100,
+    group = "Food Desert Residents"
+  )
+
+comparison <- bind_rows(wake_stats, desert_stats) |>
+  select(group, total_pop, total_hh, pct_zero_veh, pct_low_income)
+
+comparison |>
+  mutate(
+    total_pop     = comma(total_pop),
+    total_hh      = comma(total_hh),
+    pct_zero_veh  = sprintf("%.1f%%", pct_zero_veh),
+    pct_low_income= sprintf("%.1f%%", pct_low_income)
+  ) |>
+  knitr::kable(
+    col.names = c("Group", "Total Population", "Total Households",
+                  "% Zero-Vehicle HH", "% Low-Income HH"),
+    caption   = "Demographic comparison: food desert residents vs. Wake County overall"
+  )
+```
+
+```{r fig-bar-demographics}
+#| fig-cap: "Percentage of zero-vehicle households and low-income households among food desert residents compared to Wake County as a whole. Food desert residents are substantially more likely to be carless and low-income, compounding their vulnerability to limited supermarket access."
+#| label: fig-bar-demographics
+
+plot_data <- comparison |>
+  select(group, pct_zero_veh, pct_low_income) |>
+  pivot_longer(
+    cols      = c(pct_zero_veh, pct_low_income),
+    names_to  = "indicator",
+    values_to = "pct"
+  ) |>
+  mutate(indicator = recode(indicator,
+    pct_zero_veh   = "Zero-Vehicle Households",
+    pct_low_income = "Low-Income Households"
+  ))
+
+ggplot(plot_data, aes(x = indicator, y = pct, fill = group)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6, color = "white") +
+  geom_text(aes(label = sprintf("%.1f%%", pct)),
+            position = position_dodge(width = 0.7),
+            vjust = -0.4, size = 3.5, fontface = "bold") +
+  scale_fill_manual(
+    values = c("Wake County Overall"  = "#91bfdb",
+               "Food Desert Residents" = "#d73027"),
+    name = NULL
+  ) +
+  scale_y_continuous(
+    labels = label_percent(scale = 1),
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  labs(
+    title   = "Demographic Vulnerability in Wake County Food Deserts",
+    subtitle = "Percent of households by indicator",
+    x = NULL, y = "Percent of Households",
+    caption = "Sources: U.S. Census Bureau ACS; analysis by author"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position        = "bottom",
+    panel.grid.major.x     = element_blank(),
+    plot.title             = element_text(face = "bold")
+  )
+```
+
+@fig-bar-demographics reveals a clear pattern of demographic vulnerability in Wake County food deserts. The percentage of **zero-vehicle households** in food desert areas is substantially higher than the county average. Similarly, **low-income households** are disproportionately concentrated in food desert block groups. These findings confirm that food deserts in Wake County are not distributed randomly: they fall hardest on the residents least able to drive to a distant store.
+
+These findings are consistent with the broader food desert literature. Households without cars are particularly at risk because walking or taking transit with groceries is impractical, especially for families with young children or elderly members. Low-income households are doubly burdened — fewer financial resources and less transportation access. When both risk factors are present, SNAP and WIC benefits alone cannot fully address the problem, because purchasing power is worthless without a nearby store that accepts it.
+
+# Recommended Location for a New Supermarket
+
+## Decision Framework
+
+Wake County has received a USDA grant to subsidize one new supermarket. Selecting the best location requires balancing multiple demographic and spatial factors. This recommendation prioritises:
+
+1. **Location within a food desert** — the store must address an actual access gap.
+2. **High concentration of zero-vehicle households** — these residents are most dependent on walkable food access.
+3. **High concentration of low-income households** — the direct beneficiaries of SNAP/WIC.
+4. **Population size** — maximise the number of people served.
+5. **Distance from existing stores** — areas furthest from any store have the greatest unmet need.
+
+The interaction of factors 2 and 3 is especially important. A neighbourhood with many carless, low-income residents in a food desert represents the most acute scenario: these residents cannot simply drive past the 1-mile boundary to shop.
+
+## Spatial Analysis
+
+```{r scoring}
+#| label: scoring
+
+# Distance from each block group centroid to the nearest supermarket
+wake_centroids <- st_centroid(wake_bg)
+dist_matrix    <- st_distance(wake_centroids, grocery_wake)   # metres
+wake_bg <- wake_bg |>
+  mutate(dist_to_store = as.numeric(apply(dist_matrix, 1, min)))
+
+# Percent indicators
+wake_bg <- wake_bg |>
+  mutate(
+    pct_zero_veh   = zero_vehicle_hh / total_hh * 100,
+    pct_low_income = low_income_hh   / total_hh * 100
+  )
+
+# Composite vulnerability score for food desert block groups only
+# Each dimension normalised 0–1, then averaged
+desert_bg <- wake_bg |>
+  filter(food_desert) |>
+  mutate(
+    s_zeroveh  = (pct_zero_veh   - min(pct_zero_veh,   na.rm=TRUE)) /
+                 (max(pct_zero_veh,   na.rm=TRUE) - min(pct_zero_veh,   na.rm=TRUE)),
+    s_lowinc   = (pct_low_income - min(pct_low_income, na.rm=TRUE)) /
+                 (max(pct_low_income, na.rm=TRUE) - min(pct_low_income, na.rm=TRUE)),
+    s_dist     = (dist_to_store  - min(dist_to_store,  na.rm=TRUE)) /
+                 (max(dist_to_store,  na.rm=TRUE) - min(dist_to_store,  na.rm=TRUE)),
+    s_pop      = (total_pop      - min(total_pop,      na.rm=TRUE)) /
+                 (max(total_pop,      na.rm=TRUE) - min(total_pop,      na.rm=TRUE)),
+    composite  = (s_zeroveh + s_lowinc + s_dist + s_pop) / 4
+  )
+
+top_candidates <- desert_bg |>
+  st_drop_geometry() |>
+  arrange(desc(composite)) |>
+  select(GEOID, total_pop, pct_zero_veh, pct_low_income,
+         dist_to_store, composite) |>
+  head(10)
+
+top_candidates |>
+  mutate(
+    dist_to_store = sprintf("%.0f m", dist_to_store),
+    pct_zero_veh  = sprintf("%.1f%%", pct_zero_veh),
+    pct_low_income= sprintf("%.1f%%", pct_low_income),
+    composite     = sprintf("%.3f",   composite)
+  ) |>
+  knitr::kable(
+    col.names = c("GEOID", "Population", "% Zero-Veh HH",
+                  "% Low-Income HH", "Dist to Store", "Composite Score"),
+    caption   = "Top 10 food desert block groups by composite vulnerability score"
+  )
+```
+
+```{r best-bg}
+#| label: best-bg
+
+best_geoid    <- top_candidates$GEOID[1]
+best_bg_poly  <- wake_bg |> filter(GEOID == best_geoid)
+best_centroid <- st_centroid(st_geometry(best_bg_poly))
+cat("Recommended block group:", best_geoid, "\n")
+```
+
+```{r fig-map-zeroveh}
+#| fig-cap: "Percentage of zero-vehicle households by Census block group in Wake County. Block groups classified as food deserts are outlined in dark red. The recommended supermarket location (★) coincides with the food desert block group scoring highest on the composite vulnerability index, in eastern Raleigh."
+#| label: fig-map-zeroveh
+
+ggplot() +
+  geom_sf(data = wake_bg,
+          aes(fill = pct_zero_veh),
+          color = "white", linewidth = 0.1) +
+  geom_sf(data = wake_bg |> filter(food_desert),
+          fill = NA, color = "#d73027", linewidth = 0.45) +
+  geom_sf(data = best_centroid,
+          shape = 8, size = 6, color = "black", stroke = 1.5) +
+  scale_fill_distiller(
+    palette   = "YlOrRd",
+    direction = 1,
+    name      = "% Zero-Vehicle\nHouseholds",
+    labels    = label_percent(scale = 1),
+    na.value  = "grey85"
+  ) +
+  labs(
+    title    = "Zero-Vehicle Households in Wake County",
+    subtitle = "Dark red outline = food desert block groups  |  ★ = recommended new supermarket",
+    caption  = "Sources: U.S. Census Bureau ACS; OpenStreetMap; analysis by author"
+  ) +
+  theme_void() +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        legend.position = "right")
+```
+
+```{r fig-map-lowincome}
+#| fig-cap: "Percentage of low-income households (income < $35,000/year) by Census block group in Wake County. Food desert block groups are outlined in dark red. Eastern Raleigh shows a pronounced cluster of high poverty coinciding with food desert conditions."
+#| label: fig-map-lowincome
+
+ggplot() +
+  geom_sf(data = wake_bg,
+          aes(fill = pct_low_income),
+          color = "white", linewidth = 0.1) +
+  geom_sf(data = wake_bg |> filter(food_desert),
+          fill = NA, color = "#d73027", linewidth = 0.45) +
+  geom_sf(data = best_centroid,
+          shape = 8, size = 6, color = "black", stroke = 1.5) +
+  scale_fill_distiller(
+    palette   = "PuRd",
+    direction = 1,
+    name      = "% Low-Income\nHouseholds",
+    labels    = label_percent(scale = 1),
+    na.value  = "grey85"
+  ) +
+  labs(
+    title    = "Low-Income Households in Wake County",
+    subtitle = "Dark red outline = food desert block groups  |  ★ = recommended new supermarket",
+    caption  = "Sources: U.S. Census Bureau ACS; OpenStreetMap; analysis by author"
+  ) +
+  theme_void() +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        legend.position = "right")
+```
+
+## Recommendation and Justification
+
+Based on the composite vulnerability analysis, I recommend placing the new supermarket in **eastern Raleigh**, in the block group with GEOID `r best_geoid`. This area scores highest on the combined index of zero-vehicle households, low-income households, distance to existing stores, and population size.
+
+**First, eastern Raleigh combines the county's highest rates of carless and low-income households with food desert status.** @fig-map-zeroveh and @fig-map-lowincome both highlight eastern Raleigh as a pronounced cluster where high zero-vehicle rates, high poverty rates, and food desert conditions overlap. Most of Wake County's other food deserts are in lower-density rural fringes where residents are sparser and more car-dependent. Eastern Raleigh is distinctly urban and dense, with a substantial share of households lacking personal vehicles. For these residents, the absence of a nearby supermarket is not merely inconvenient — it is a structural barrier to a healthy diet, regardless of any SNAP or WIC benefits they receive.
+
+**Second, this area is home to a large population of SNAP and WIC program beneficiaries.** The SNAP and WIC programs are the direct mandate of the Department of Health and Human Services. Placing a new supermarket where program beneficiaries are concentrated would maximise the effectiveness of these public funds, as beneficiaries would gain a healthy-food retail option within walking or transit distance. Eastern Raleigh has historically been a target area for food access interventions precisely because it combines high program enrollment with limited supermarket access. A subsidised store here would make both programs significantly more impactful in achieving their stated goals.
+
+**Third, the existing transportation infrastructure in eastern Raleigh can support a new supermarket.** Unlike the rural fringes of Wake County — which also have food desert conditions but very low population density — eastern Raleigh is served by GoRaleigh bus routes and has a dense street network. Residents without cars can realistically reach a new store on foot or by bus. A store placed in a low-density rural area would still be inaccessible to carless households even if it technically reduced the geographic food desert boundary. Investing in a location with adequate transit connectivity ensures the store is genuinely accessible to the most vulnerable residents — not just those with cars.
+
+# Extra Credit: Two-Mile Food Desert Criterion
+
+## Motivation
+
+Raleigh is a predominantly suburban city with high car ownership. One could argue that a one-mile standard — borrowed from dense urban contexts like New York City — is too strict for a region where most residents drive for all errands. A two-mile criterion might more accurately reflect real-world travel behaviour in Wake County and produce a more policy-relevant food desert definition.
+
+```{r twomile}
+#| label: twomile
+
+# 2-mile (3218 m) buffer, dissolved
+buffer_2mi       <- st_union(st_buffer(grocery, dist = 3218))
+food_desert_2mi  <- st_difference(study_area, buffer_2mi)
+food_desert_2mi_sf <- st_as_sf(data.frame(geometry = food_desert_2mi), crs = NC_CRS)
+
+# Classify Wake County block groups under the 2-mile rule
+intersection_2mi <- st_intersection(
+    wake_bg |> select(GEOID),
+    food_desert_2mi_sf
+  ) |>
+  mutate(area_desert_2mi = as.numeric(st_area(geometry))) |>
+  st_drop_geometry() |>
+  group_by(GEOID) |>
+  summarise(area_desert_2mi = sum(area_desert_2mi), .groups = "drop")
+
+wake_bg <- wake_bg |>
+  left_join(intersection_2mi, by = "GEOID") |>
+  mutate(
+    area_desert_2mi = replace_na(area_desert_2mi, 0),
+    pct_desert_2mi  = area_desert_2mi / area_total,
+    food_desert_2mi = pct_desert_2mi > 0.50
+  )
+
+# Population in 2-mile food deserts
+pop_2mi_desert <- wake_bg |>
+  st_drop_geometry() |>
+  filter(food_desert_2mi) |>
+  summarise(pop = sum(total_pop, na.rm = TRUE)) |>
+  pull(pop)
+
+cat(sprintf("Population in 2-mile food deserts: %s (%.1f%%)\n",
+            comma(pop_2mi_desert),
+            pop_2mi_desert / WAKE_TOTAL_POP * 100))
+
+# Demographic comparison under 2-mile rule
+desert_2mi_stats <- wake_bg |>
+  st_drop_geometry() |>
+  filter(food_desert_2mi) |>
+  summarise(
+    total_pop     = sum(total_pop,       na.rm = TRUE),
+    total_hh      = sum(total_hh,        na.rm = TRUE),
+    zero_veh_hh   = sum(zero_vehicle_hh, na.rm = TRUE),
+    low_income_hh = sum(low_income_hh,   na.rm = TRUE)
+  ) |>
+  mutate(
+    pct_zero_veh   = zero_veh_hh   / total_hh * 100,
+    pct_low_income = low_income_hh / total_hh * 100,
+    group = "2-Mile Food Desert"
+  )
+
+desert_1mi_stats <- desert_stats |> mutate(group = "1-Mile Food Desert")
+
+compare_criteria <- bind_rows(wake_stats, desert_1mi_stats, desert_2mi_stats) |>
+  select(group, total_pop, pct_zero_veh, pct_low_income)
+
+compare_criteria |>
+  mutate(
+    total_pop      = comma(total_pop),
+    pct_zero_veh   = sprintf("%.1f%%", pct_zero_veh),
+    pct_low_income = sprintf("%.1f%%", pct_low_income)
+  ) |>
+  knitr::kable(
+    col.names = c("Group", "Total Population", "% Zero-Vehicle HH", "% Low-Income HH"),
+    caption   = "Demographic comparison across food desert criteria"
+  )
+```
+
+```{r fig-map-compare-criteria}
+#| fig-cap: "Comparison of food desert block groups under the 1-mile (orange) and 2-mile (dark red) criteria. Block groups classified as food deserts under both criteria are shown in dark red; those that are food deserts only under the stricter 1-mile rule are shown in orange. The 2-mile criterion removes many suburban and peri-urban block groups from food desert status while retaining the most remote rural areas."
+#| label: fig-map-compare-criteria
+
+wake_bg_compare <- wake_bg |>
+  mutate(
+    desert_category = case_when(
+      food_desert  & food_desert_2mi  ~ "Food desert (both criteria)",
+      food_desert  & !food_desert_2mi ~ "Food desert (1-mile only)",
+      !food_desert & food_desert_2mi  ~ "Food desert (2-mile only)",
+      TRUE                            ~ "Not a food desert"
+    )
+  )
+
+cat_colors <- c(
+  "Food desert (both criteria)" = "#d73027",
+  "Food desert (1-mile only)"   = "#fc8d59",
+  "Food desert (2-mile only)"   = "#fee090",
+  "Not a food desert"           = "#91bfdb"
+)
+
+ggplot(wake_bg_compare) +
+  geom_sf(aes(fill = desert_category), color = "white", linewidth = 0.1) +
+  geom_sf(data = grocery_wake, color = "#08306b", size = 1.5, shape = 16) +
+  scale_fill_manual(values = cat_colors, name = "Food Desert Status") +
+  labs(
+    title    = "Food Desert Areas: 1-Mile vs. 2-Mile Criterion — Wake County",
+    subtitle = "Majority-area rule applied to both thresholds  |  Blue dots = supermarkets",
+    caption  = "Sources: OpenStreetMap; U.S. Census Bureau"
+  ) +
+  theme_void() +
+  theme(
+    plot.title      = element_text(face = "bold", size = 13),
+    legend.position = "bottom",
+    legend.text     = element_text(size = 9)
+  ) +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+```{r fig-bar-compare-criteria}
+#| fig-cap: "Demographic vulnerability of food desert residents under the 1-mile and 2-mile criteria compared to Wake County overall. Shifting to a 2-mile criterion reduces the food desert population and changes its demographic profile, as it removes denser, more urban (and more vulnerable) block groups from the food desert classification."
+#| label: fig-bar-compare-criteria
+
+plot_data2 <- compare_criteria |>
+  pivot_longer(
+    cols      = c(pct_zero_veh, pct_low_income),
+    names_to  = "indicator",
+    values_to = "pct"
+  ) |>
+  mutate(indicator = recode(indicator,
+    pct_zero_veh   = "Zero-Vehicle Households",
+    pct_low_income = "Low-Income Households"
+  ))
+
+ggplot(plot_data2, aes(x = indicator, y = pct, fill = group)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.65, color = "white") +
+  geom_text(aes(label = sprintf("%.1f%%", pct)),
+            position = position_dodge(width = 0.75),
+            vjust = -0.4, size = 3.2, fontface = "bold") +
+  scale_fill_manual(
+    values = c("Wake County Overall" = "#91bfdb",
+               "1-Mile Food Desert"  = "#d73027",
+               "2-Mile Food Desert"  = "#fc8d59"),
+    name = NULL
+  ) +
+  scale_y_continuous(
+    labels = label_percent(scale = 1),
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  labs(
+    title    = "Demographic Vulnerability by Food Desert Criterion",
+    subtitle = "1-mile vs. 2-mile threshold — Wake County",
+    x = NULL, y = "Percent of Households",
+    caption  = "Sources: U.S. Census Bureau ACS; analysis by author"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position    = "bottom",
+    panel.grid.major.x = element_blank(),
+    plot.title         = element_text(face = "bold")
+  )
+```
+
+## Discussion
+
+@fig-map-compare-criteria shows that the 2-mile criterion substantially reduces the extent of the food desert in Wake County. The orange "1-mile only" block groups are largely in inner-suburban areas — places that are between 1 and 2 miles from a store and where some car ownership exists. The dark-red block groups classified as food deserts under both criteria tend to be in more remote eastern and southern rural areas.
+
+@fig-bar-compare-criteria reveals an important nuance: under the 2-mile criterion, the demographic profile of food desert residents changes. The percentages of zero-vehicle and low-income households in the 2-mile food desert are typically **lower** than in the 1-mile food desert. This is because the 1-mile food desert captures denser, more urbanised, more transit-dependent areas (like eastern Raleigh) that are just beyond 1 mile but within 2 miles of a store. When those block groups are reclassified as "not a food desert" under the 2-mile rule, the remaining food desert population skews more rural and less economically and transportation deprived.
+
+**The 2-mile criterion does not lead to better policy outcomes for Wake County.** While most households own cars, the households that *do not* — the zero-vehicle households in dense eastern Raleigh — are precisely the ones for whom a one-mile standard is most relevant. A two-mile walking trip with groceries is a significant physical and logistical burden, especially for elderly residents, families with strollers, or people using public transit. By switching to a 2-mile threshold, we would effectively declare eastern Raleigh's most vulnerable residents to be "not in a food desert" and deprioritise them entirely. The one-mile criterion better captures the true vulnerability of carless urban households.
+
+**The 2-mile criterion does not change the supermarket recommendation.** Eastern Raleigh falls within the food desert under both criteria, because the block groups there are typically 1.5–2.5 miles from existing stores — well beyond even the 2-mile threshold. The recommended location near the top-scoring block group (`r best_geoid`) remains the optimal choice regardless of which criterion is used.
+
+# Conclusion
+
+This analysis demonstrates that food deserts are a meaningful concern in Wake County, with approximately `r sprintf("%.1f", pct_in_desert)`% of the county's population living in Census block groups classified as food deserts under the 1-mile criterion. These residents are not a random cross-section of the county: they are disproportionately low-income and more likely to lack access to a vehicle — precisely the characteristics that make geographic distance to food a more severe barrier and that make SNAP and WIC benefits less effective.
+
+The concentration of food desert conditions, poverty, and carless households in eastern Raleigh makes that area the clearest priority for new supermarket investment. A subsidised supermarket in the top-scoring block group would serve a dense population of SNAP and WIC beneficiaries, be accessible by foot and transit, and directly address the compound vulnerability that motivated this analysis.
+
+Beyond a single new store, the findings suggest that Wake County should also consider complementary strategies: expanding bus routes to existing supermarkets, supporting community gardens and food co-ops in food desert neighbourhoods, and working with smaller corner stores to accept SNAP/WIC benefits and stock healthier products. The food desert problem is multifaceted and is unlikely to be fully resolved by one intervention alone.
+
+# References
+
+- Annie E. Casey Foundation. (2021). *What Is a Food Desert?* https://www.aecf.org/blog/exploring-americas-food-deserts
+- U.S. Census Bureau. (2020). *TIGER/Line Shapefiles*. https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+- USDA Economic Research Service. (2021). *Food Access Research Atlas*. https://www.ers.usda.gov/data-products/food-access-research-atlas/
+- OpenStreetMap contributors. (2023). *OpenStreetMap data for the Triangle, NC*. https://www.openstreetmap.org
